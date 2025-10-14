@@ -4,6 +4,7 @@ import { getRole, logout } from '../utils/auth';
 import PatientProfile from '../components/patient/PatientProfile';
 import MedicalHistory from '../components/patient/MedicalHistory';
 import AppointmentHistory from '../components/patient/AppointmentHistory';
+import DoctorSearch from '../components/patient/DoctorSearch';
 
 const PatientDashboard = () => {
     const [activeTab, setActiveTab] = useState('profile');
@@ -23,14 +24,17 @@ const PatientDashboard = () => {
 
     const tabs = [
         { id: 'profile', label: 'My Profile', icon: '👤' },
+        { id: 'doctors', label: 'Find Doctors', icon: '🔍' },
         { id: 'medical', label: 'Medical History', icon: '🏥' },
-        { id: 'appointments', label: 'Appointments', icon: '📅' }
+        { id: 'appointments', label: 'My Appointments', icon: '📅' }
     ];
 
     const renderActiveTab = () => {
         switch (activeTab) {
             case 'profile':
                 return <PatientProfile />;
+            case 'doctors':
+                return <DoctorSearch />;
             case 'medical':
                 return <MedicalHistory />;
             case 'appointments':

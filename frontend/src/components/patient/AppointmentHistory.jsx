@@ -1,10 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import api from '../../services/api';
+import { appointmentAPI } from '../../services/api';
+import AddReview from './AddReview';
 
 const AppointmentHistory = () => {
     const [appointments, setAppointments] = useState([]);
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState('all'); // all, upcoming, past
+    const [showReviewModal, setShowReviewModal] = useState(false);
+    const [selectedAppointment, setSelectedAppointment] = useState(null);
+    const [successMessage, setSuccessMessage] = useState('');
 
     useEffect(() => {
         fetchAppointments();
@@ -12,7 +16,7 @@ const AppointmentHistory = () => {
 
     const fetchAppointments = async () => {
         try {
-            const response = await api.get('/api/patients/me/appointments');
+            const response = await appointmentAPI.getPatientAppointments();
             setAppointments(response.data);
         } catch (error) {
             console.error('Error fetching appointments:', error);
@@ -44,8 +48,14 @@ const AppointmentHistory = () => {
 
     const getStatusColor = (status) => {
         switch (status) {
-            case 'SCHEDULED':
+            case 'PENDING':
+                return 'bg-yellow-100 text-yellow-800';
+            case 'APPROVED':
                 return 'bg-blue-100 text-blue-800';
+            case 'CONFIRMED':
+                return 'bg-green-100 text-green-800';
+            case 'REJECTED':
+                return 'bg-red-100 text-red-800';
             case 'COMPLETED':
                 return 'bg-green-100 text-green-800';
             case 'CANCELLED':
@@ -57,8 +67,14 @@ const AppointmentHistory = () => {
 
     const getStatusText = (status) => {
         switch (status) {
-            case 'SCHEDULED':
-                return 'Scheduled';
+            case 'PENDING':
+                return 'Pending';
+            case 'APPROVED':
+                return 'Approved';
+            case 'CONFIRMED':
+                return 'Confirmed';
+            case 'REJECTED':
+                return 'Rejected';
             case 'COMPLETED':
                 return 'Completed';
             case 'CANCELLED':
@@ -68,15 +84,26 @@ const AppointmentHistory = () => {
         }
     };
 
+    const handleAddReview = (appointment) => {
+        setSelectedAppointment(appointment);
+        setShowReviewModal(true);
+    };
+
+    const handleReviewSuccess = (message) => {
+        setSuccessMessage(message);
+        fetchAppointments(); // Refresh appointments
+        setTimeout(() => setSuccessMessage(''), 3000);
+    };
+
     const filteredAppointments = appointments.filter(appointment => {
         const now = new Date();
         const appointmentDate = new Date(appointment.appointmentDateTime);
         
         switch (filter) {
             case 'upcoming':
-                return appointmentDate > now && appointment.status === 'SCHEDULED';
+                return appointmentDate > now && ['PENDING', 'APPROVED', 'CONFIRMED'].includes(appointment.status);
             case 'past':
-                return appointmentDate <= now || appointment.status === 'COMPLETED';
+                return appointmentDate <= now || ['COMPLETED', 'CANCELLED', 'REJECTED'].includes(appointment.status);
             default:
                 return true;
         }
@@ -92,6 +119,11 @@ const AppointmentHistory = () => {
 
     return (
         <div className="max-w-6xl mx-auto">
+            {successMessage && (
+                <div className="mb-4 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg">
+                    {successMessage}
+                </div>
+            )}
             <div className="bg-white rounded-lg shadow-md p-6">
                 <div className="flex justify-between items-center mb-6">
                     <h2 className="text-2xl font-bold text-gray-800">Appointment History</h2>
@@ -180,10 +212,18 @@ const AppointmentHistory = () => {
                                         </div>
                                     </div>
 
-                                    <div className="ml-4">
+                                    <div className="ml-4 flex flex-col items-end space-y-2">
                                         <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(appointment.status)}`}>
                                             {getStatusText(appointment.status)}
                                         </span>
+                                        {appointment.status === 'COMPLETED' && (
+                                            <button
+                                                onClick={() => handleAddReview(appointment)}
+                                                className="text-sm bg-blue-600 text-white px-3 py-1 rounded-lg hover:bg-blue-700 transition-colors"
+                                            >
+                                                Add Review
+                                            </button>
+                                        )}
                                     </div>
                                 </div>
                             </div>
@@ -196,9 +236,9 @@ const AppointmentHistory = () => {
                     <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div className="bg-blue-50 p-4 rounded-lg">
                             <div className="text-2xl font-bold text-blue-600">
-                                {appointments.filter(a => a.status === 'SCHEDULED').length}
+                                {appointments.filter(a => ['PENDING', 'APPROVED', 'CONFIRMED'].includes(a.status)).length}
                             </div>
-                            <div className="text-sm text-blue-800">Scheduled</div>
+                            <div className="text-sm text-blue-800">Active</div>
                         </div>
                         <div className="bg-green-50 p-4 rounded-lg">
                             <div className="text-2xl font-bold text-green-600">
@@ -215,6 +255,15 @@ const AppointmentHistory = () => {
                     </div>
                 )}
             </div>
+
+            {/* Review Modal */}
+            {showReviewModal && (
+                <AddReview
+                    appointment={selectedAppointment}
+                    onClose={() => setShowReviewModal(false)}
+                    onSuccess={handleReviewSuccess}
+                />
+            )}
         </div>
     );
 };
