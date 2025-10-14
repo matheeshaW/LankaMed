@@ -105,6 +105,7 @@ const MedicalHistoryCard = () => {
     const tabs = [
         { id: 'all', label: 'All Records' },
         { id: 'recent', label: 'Recent' },
+        { id: 'allergies', label: 'Allergies' },
         { id: 'prescriptions', label: 'Prescriptions' }
     ];
 
@@ -233,6 +234,36 @@ const MedicalHistoryCard = () => {
                                 Diagnosed: {formatDate(condition.diagnosedDate)}
                             </p>
                             <p className="text-xs text-gray-600">{condition.notes || 'No additional notes'}</p>
+                        </div>
+                    ))}
+                    
+                    {activeTab === 'allergies' && allergies.map((allergy) => (
+                        <div key={allergy.allergyId} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                            <div className="flex items-center mb-2">
+                                <span className="text-2xl mr-2">⚠️</span>
+                                <h4 className="font-semibold text-gray-800 text-sm">{allergy.allergyName}</h4>
+                                <span className={`ml-2 px-2 py-1 rounded-full text-xs font-medium ${getSeverityColor(allergy.severity)}`}>
+                                    {allergy.severity}
+                                </span>
+                            </div>
+                            <p className="text-xs text-gray-500 mb-2">
+                                Added: {formatDate(allergy.createdAt || allergy.updatedAt)}
+                            </p>
+                            <p className="text-xs text-gray-600 mb-2">{allergy.notes || 'No additional notes'}</p>
+                            <div className="flex justify-end space-x-1">
+                                <button
+                                    onClick={() => handleEditAllergy(allergy)}
+                                    className="text-blue-600 hover:text-blue-800 text-xs"
+                                >
+                                    Edit
+                                </button>
+                                <button
+                                    onClick={() => handleDeleteAllergy(allergy.allergyId)}
+                                    className="text-red-600 hover:text-red-800 text-xs"
+                                >
+                                    Delete
+                                </button>
+                            </div>
                         </div>
                     ))}
                     
