@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
+import { validatePatientForm } from '../../utils/validators';
 
 const PatientProfile = () => {
     const [profile, setProfile] = useState(null);
@@ -15,6 +16,7 @@ const PatientProfile = () => {
         contactNumber: '',
         address: ''
     });
+    const [errors, setErrors] = useState({});
 
     useEffect(() => {
         fetchProfile();
@@ -42,13 +44,22 @@ const PatientProfile = () => {
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
-        setFormData(prev => ({
-            ...prev,
+        const next = {
+            ...formData,
             [name]: value
-        }));
+        };
+        setFormData(next);
+        // validate on change (single responsibility)
+        const v = validatePatientForm(next);
+        setErrors(v);
     };
 
     const handleSave = async () => {
+        const v = validatePatientForm(formData);
+        setErrors(v);
+        const hasError = Object.values(v).some(Boolean);
+        if (hasError) return;
+
         setSaving(true);
         try {
             const response = await api.put('/api/patients/me', formData);
@@ -111,6 +122,7 @@ const PatientProfile = () => {
                             disabled={!isEditing}
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
                         />
+                        {errors.firstName && <div className="text-red-600 text-sm mt-1">{errors.firstName}</div>}
                     </div>
 
                     <div>
@@ -125,6 +137,7 @@ const PatientProfile = () => {
                             disabled={!isEditing}
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
                         />
+                        {errors.lastName && <div className="text-red-600 text-sm mt-1">{errors.lastName}</div>}
                     </div>
 
                     <div>
@@ -139,6 +152,7 @@ const PatientProfile = () => {
                             disabled={!isEditing}
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
                         />
+                        {errors.email && <div className="text-red-600 text-sm mt-1">{errors.email}</div>}
                     </div>
 
                     <div>
@@ -153,6 +167,7 @@ const PatientProfile = () => {
                             disabled={!isEditing}
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
                         />
+                        {errors.dateOfBirth && <div className="text-red-600 text-sm mt-1">{errors.dateOfBirth}</div>}
                     </div>
 
                     <div>
@@ -171,6 +186,7 @@ const PatientProfile = () => {
                             <option value="FEMALE">Female</option>
                             <option value="OTHER">Other</option>
                         </select>
+                        {errors.gender && <div className="text-red-600 text-sm mt-1">{errors.gender}</div>}
                     </div>
 
                     <div>
@@ -185,6 +201,7 @@ const PatientProfile = () => {
                             disabled={!isEditing}
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
                         />
+                        {errors.contactNumber && <div className="text-red-600 text-sm mt-1">{errors.contactNumber}</div>}
                     </div>
 
                     <div className="md:col-span-2">
@@ -212,7 +229,7 @@ const PatientProfile = () => {
                         </button>
                         <button
                             onClick={handleSave}
-                            disabled={saving}
+                            disabled={saving || Object.values(errors).some(Boolean)}
                             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
                         >
                             {saving ? 'Saving...' : 'Save Changes'}

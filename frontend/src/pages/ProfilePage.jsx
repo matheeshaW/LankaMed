@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import api from '../services/api';
+import { getRole } from '../utils/auth';
 
 export default function ProfilePage() {
 	const [profile, setProfile] = useState(null);
@@ -11,10 +12,22 @@ export default function ProfilePage() {
 
 	useEffect(() => {
 		const fetchProfile = async () => {
-			const res = await api.get('/api/users/me');
-			setProfile(res.data);
-			setFullName(res.data.fullName || '');
-			setPhone(res.data.phone || '');
+			try {
+				if (getRole() === 'PATIENT') {
+					// Patient endpoint has separate fields; reuse it so PatientDashboard remains unchanged
+					const res = await api.get('/api/patients/me');
+					setProfile(res.data);
+					setFullName(((res.data.firstName || '') + ' ' + (res.data.lastName || '')).trim());
+					setPhone(res.data.contactNumber || '');
+				} else {
+					const res = await api.get('/api/users/me');
+					setProfile(res.data);
+					setFullName(res.data.fullName || '');
+					setPhone(res.data.phone || '');
+				}
+			} catch (err) {
+				console.error('Failed to load profile for profile page', err);
+			}
 		};
 		fetchProfile();
 	}, []);
@@ -155,12 +168,12 @@ export default function ProfilePage() {
 									<div className="space-y-2 text-sm text-gray-600">
 										<div className="flex justify-between">
 											<span>Role:</span>
-											<span className="font-medium capitalize">{profile.role.toLowerCase()}</span>
+											<span className="font-medium capitalize">{(profile.role || '').toLowerCase()}</span>
 										</div>
 										<div className="flex justify-between">
 											<span>Member since:</span>
 											<span className="font-medium">
-												{new Date(profile.createdAt).toLocaleDateString()}
+												{profile.createdAt ? new Date(profile.createdAt).toLocaleDateString() : '—'}
 											</span>
 										</div>
 									</div>
