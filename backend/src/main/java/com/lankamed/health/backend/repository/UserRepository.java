@@ -1,10 +1,11 @@
 package com.lankamed.health.backend.repository;
 
-import com.lankamed.health.backend.model.User;
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import java.util.Optional;
+import com.lankamed.health.backend.model.User;
 
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {
