@@ -36,7 +36,7 @@ const BloodPressureTrendChart = () => {
   const labels = data.map(dp => (new Date(dp.timestamp)).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+    <div id="bp-trend-chart" className="bg-white rounded-lg shadow-md p-6 mb-6">
       <h3 className="text-lg font-semibold text-gray-800 mb-4">Blood Pressure Trend</h3>
       <Line
         height={150}

@@ -32,7 +32,7 @@ const WeightHistoryChart = () => {
 
   const labels = data.map(dp => (new Date(dp.timestamp)).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
   return (
-    <div className="bg-white rounded-lg shadow-md p-6">
+    <div id="weight-history-chart" className="bg-white rounded-lg shadow-md p-6">
       <h3 className="text-lg font-semibold text-gray-800 mb-4">Weight History</h3>
       <Bar
         height={150}
