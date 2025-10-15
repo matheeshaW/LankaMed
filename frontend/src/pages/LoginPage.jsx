@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import api from '../services/api';
-import { getRole } from '../utils/auth';
+import { getRole, mockLogin, isLoggedIn, getCurrentUser } from '../utils/auth';
 import backgroundImage from '../assets/images/loginbackground.png';
 
 export default function LoginPage() {
@@ -21,6 +21,7 @@ export default function LoginPage() {
 			password: form.password ? '' : 'Password is required',
 		};
 		setErrors(next);
+		console.log('Validation result:', next);
 		return !next.email && !next.password;
 	};
 
@@ -28,15 +29,63 @@ export default function LoginPage() {
 		e.preventDefault();
 		setError('');
 		if (!validate()) return;
+		
+		// Check for registered users first, then fallback to mock users
 		try {
-			const res = await api.post('/api/auth/login', form);
-			localStorage.setItem('token', res.data.token);
-			const role = getRole();
-			if (role === 'ADMIN') navigate('/admin');
-			else if (role === 'PATIENT') navigate('/patient');
-			else navigate('/');
+			let mockUser;
+			
+			// Check if user is registered
+			const registeredUsers = JSON.parse(localStorage.getItem('lankamed_users') || '[]');
+			const registeredUser = registeredUsers.find(user => user.email === form.email);
+			
+			if (registeredUser) {
+				// Use registered user data
+				mockUser = registeredUser;
+				console.log('Found registered user:', mockUser);
+			} else if (form.email === 'admin@lankamed.com') {
+				// Default admin user
+				mockUser = {
+					id: 1,
+					name: 'Admin User',
+					email: 'admin@lankamed.com',
+					role: 'ADMIN',
+					phone: '+94 77 000 0000',
+					address: 'Admin Office, LankaMed'
+				};
+			} else {
+				// Default patient user
+				mockUser = {
+					id: 1,
+					name: 'John Doe',
+					email: form.email,
+					role: 'PATIENT',
+					phone: '+94 77 123 4567',
+					address: '123 Main Street, Colombo 05'
+				};
+			}
+			
+			console.log('Logging in user:', mockUser);
+			mockLogin(mockUser);
+			
+			// Wait a moment for localStorage to be updated
+			setTimeout(() => {
+				const role = getRole();
+				console.log('User role after login:', role);
+				
+				if (role === 'ADMIN') {
+					console.log('Redirecting to admin dashboard');
+					navigate('/admin');
+				} else if (role === 'PATIENT') {
+					console.log('Redirecting to patient dashboard');
+					navigate('/patient');
+				} else {
+					console.log('No role found, redirecting to home');
+					navigate('/');
+				}
+			}, 100);
 		} catch (err) {
-			setError('Invalid credentials');
+			console.error('Login error:', err);
+			setError('Login failed');
 		}
 	};
 
@@ -98,6 +147,32 @@ export default function LoginPage() {
 						>
 							Sign In
 						</button>
+						
+						{/* Debug buttons */}
+						<div className="mt-4 space-y-2">
+							<button
+								type="button"
+								onClick={() => {
+									console.log('Current form:', form);
+									console.log('Current errors:', errors);
+									console.log('Is logged in:', isLoggedIn());
+									console.log('Current role:', getRole());
+									console.log('Current user:', getCurrentUser());
+								}}
+								className="w-full bg-gray-500 text-white py-2 px-4 rounded-lg text-sm"
+							>
+								Debug Info
+							</button>
+							<button
+								type="button"
+								onClick={() => {
+									setForm({ email: 'test@example.com', password: 'password' });
+								}}
+								className="w-full bg-green-500 text-white py-2 px-4 rounded-lg text-sm"
+							>
+								Fill Test Data
+							</button>
+						</div>
 					</form>
 
 					<div className="mt-6 text-center">

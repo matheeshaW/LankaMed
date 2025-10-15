@@ -94,7 +94,7 @@ class AppointmentServiceTest {
                 .hospital(testHospital)
                 .serviceCategory(testCategory)
                 .appointmentDateTime(LocalDateTime.of(2024, 1, 15, 10, 0))
-                .status(Appointment.Status.SCHEDULED)
+                .status(Appointment.Status.PENDING)
                 .build();
 
         // Mock SecurityContext
@@ -121,7 +121,7 @@ class AppointmentServiceTest {
         AppointmentDto appointmentDto = result.get(0);
         assertEquals(1L, appointmentDto.getAppointmentId());
         assertEquals(LocalDateTime.of(2024, 1, 15, 10, 0), appointmentDto.getAppointmentDateTime());
-        assertEquals(Appointment.Status.SCHEDULED, appointmentDto.getStatus());
+        assertEquals(Appointment.Status.PENDING, appointmentDto.getStatus());
         assertEquals("Dr. Jane Smith", appointmentDto.getDoctorName());
         assertEquals("Cardiologist", appointmentDto.getDoctorSpecialization());
         assertEquals("City General Hospital", appointmentDto.getHospitalName());
@@ -167,7 +167,7 @@ class AppointmentServiceTest {
                 .hospital(testHospital)
                 .serviceCategory(testCategory)
                 .appointmentDateTime(LocalDateTime.of(2024, 2, 1, 9, 0))
-                .status(Appointment.Status.SCHEDULED)
+                .status(Appointment.Status.PENDING)
                 .build();
 
         List<Appointment> appointments = Arrays.asList(futureAppointment, testAppointment, pastAppointment);

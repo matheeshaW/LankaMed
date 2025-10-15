@@ -3,16 +3,22 @@ import { useNavigate } from 'react-router-dom';
 import { getRole, logout } from '../utils/auth';
 import PatientProfile from '../components/patient/PatientProfile';
 import MedicalHistory from '../components/patient/MedicalHistory';
-import AppointmentHistory from '../components/patient/AppointmentHistory';
-import DoctorSearch from '../components/patient/DoctorSearch';
+import UserAppointments from '../components/patient/UserAppointments';
+import DoctorList from '../components/patient/DoctorList';
+import AppointmentForm from '../components/patient/AppointmentForm';
 
 const PatientDashboard = () => {
     const [activeTab, setActiveTab] = useState('profile');
+    const [showBookingModal, setShowBookingModal] = useState(false);
+    const [selectedDoctor, setSelectedDoctor] = useState(null);
+    const [successMessage, setSuccessMessage] = useState('');
     const navigate = useNavigate();
 
     useEffect(() => {
         const role = getRole();
+        console.log('PatientDashboard - checking role:', role);
         if (role !== 'PATIENT') {
+            console.log('Not a patient, redirecting to login');
             navigate('/login');
         }
     }, [navigate]);
@@ -20,6 +26,18 @@ const PatientDashboard = () => {
     const handleLogout = () => {
         logout();
         navigate('/login');
+    };
+
+    const handleBookAppointment = (doctor) => {
+        setSelectedDoctor(doctor);
+        setShowBookingModal(true);
+    };
+
+    const handleBookingSuccess = (message) => {
+        setSuccessMessage(message);
+        setTimeout(() => setSuccessMessage(''), 5000);
+        setShowBookingModal(false);
+        setSelectedDoctor(null);
     };
 
     const tabs = [
@@ -34,11 +52,11 @@ const PatientDashboard = () => {
             case 'profile':
                 return <PatientProfile />;
             case 'doctors':
-                return <DoctorSearch />;
+                return <DoctorList onBookAppointment={handleBookAppointment} />;
             case 'medical':
                 return <MedicalHistory />;
             case 'appointments':
-                return <AppointmentHistory />;
+                return <UserAppointments />;
             default:
                 return <PatientProfile />;
         }
@@ -76,10 +94,24 @@ const PatientDashboard = () => {
 
                     {/* Tab Content */}
                     <div className="p-6">
+                        {successMessage && (
+                            <div className="mb-6 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg">
+                                {successMessage}
+                            </div>
+                        )}
                         {renderActiveTab()}
                     </div>
                 </div>
             </div>
+
+            {/* Booking Modal */}
+            {showBookingModal && selectedDoctor && (
+                <AppointmentForm
+                    doctor={selectedDoctor}
+                    onClose={() => setShowBookingModal(false)}
+                    onSuccess={handleBookingSuccess}
+                />
+            )}
         </div>
     );
 };

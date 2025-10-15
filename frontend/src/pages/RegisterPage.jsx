@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import api from '../services/api';
+import { mockLogin } from '../utils/auth';
 import backgroundImage from '../assets/images/loginbackground.png';
 
 export default function RegisterPage() {
@@ -9,6 +10,7 @@ export default function RegisterPage() {
 	const [error, setError] = useState('');
 	const [success, setSuccess] = useState('');
 	const [submitting, setSubmitting] = useState(false);
+	const navigate = useNavigate();
 
 	const validators = {
 		firstName: (v) => {
@@ -61,13 +63,40 @@ export default function RegisterPage() {
 		setError(''); setSuccess('');
 		if (!validateAll()) return;
 		setSubmitting(true);
+		
 		try {
-			await api.post('/api/auth/register', form);
-			setSuccess('Registered successfully. You can now log in.');
-			setForm({ firstName: '', lastName: '', email: '', role: 'PATIENT', password: '' });
-			setErrors({});
+			// Mock registration - store user data and auto-login
+			const newUser = {
+				id: Date.now(), // Simple ID generation
+				name: `${form.firstName} ${form.lastName}`,
+				email: form.email,
+				role: form.role,
+				phone: '+94 77 000 0000', // Default phone
+				address: 'Colombo, Sri Lanka' // Default address
+			};
+			
+			// Store user data in localStorage
+			const existingUsers = JSON.parse(localStorage.getItem('lankamed_users') || '[]');
+			existingUsers.push(newUser);
+			localStorage.setItem('lankamed_users', JSON.stringify(existingUsers));
+			
+			// Auto-login the user
+			mockLogin(newUser);
+			
+			setSuccess('Registration successful! Redirecting to dashboard...');
+			
+			// Redirect to appropriate dashboard
+			setTimeout(() => {
+				if (form.role === 'ADMIN') {
+					navigate('/admin');
+				} else {
+					navigate('/patient');
+				}
+			}, 1500);
+			
 		} catch (err) {
-			setError(err.response?.data?.message || 'Registration failed');
+			console.error('Registration error:', err);
+			setError('Registration failed. Please try again.');
 		} finally {
 			setSubmitting(false);
 		}

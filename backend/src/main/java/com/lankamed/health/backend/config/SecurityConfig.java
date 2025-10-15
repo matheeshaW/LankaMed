@@ -42,6 +42,8 @@ public class SecurityConfig {
                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
             .requestMatchers("/api/auth/**").permitAll()
+            .requestMatchers("/api/doctors/**").permitAll()
+            .requestMatchers("/api/health").permitAll()
             // Allow CORS preflight requests (OPTIONS) to pass without authentication
             .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
             .requestMatchers(HttpMethod.GET, "/api/categories").permitAll()

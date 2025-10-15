@@ -16,6 +16,8 @@ api.interceptors.request.use((config) => {
 export const doctorAPI = {
 	searchDoctors: (name, specialization) => 
 		api.get('/api/doctors', { params: { name, specialization } }),
+	searchDoctorProfiles: (name, specialization) => 
+		api.get('/api/doctors/profiles', { params: { name, specialization } }),
 };
 
 // Appointment API endpoints

@@ -24,7 +24,7 @@ public class StaffDetails {
     private Hospital hospital;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "service_category_id")
+    @JoinColumn(name = "service_category_id", referencedColumnName = "category_id")
     private ServiceCategory serviceCategory;
 
     @Size(max = 100)

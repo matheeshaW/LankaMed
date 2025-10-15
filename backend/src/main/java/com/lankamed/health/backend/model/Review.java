@@ -34,7 +34,7 @@ public class Review {
     private Patient patient;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "doctor_id", nullable = false)
+    @JoinColumn(name = "doctor_id", referencedColumnName = "staff_id", nullable = false)
     private StaffDetails doctor;
 
     @NotNull
