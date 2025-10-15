@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
 import ConditionModal from './ConditionModal';
 import AllergyModal from './AllergyModal';
+import HealthMetricsCard from './HealthMetricsCard';
+import BloodPressureTrendChart from './BloodPressureTrendChart';
+import WeightHistoryChart from './WeightHistoryChart';
 
 const MedicalHistoryCard = () => {
     const [activeTab, setActiveTab] = useState('all');
@@ -323,28 +326,13 @@ const MedicalHistoryCard = () => {
             </div>
             
             {/* Placeholder for Health Metrics - to be added later */}
-            <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-                <h3 className="text-lg font-semibold text-gray-800 mb-4">Health Metrics</h3>
-                <div className="text-center text-gray-500 py-8">
-                    <p>Health Metrics section will be added here</p>
-                </div>
-            </div>
+            <HealthMetricsCard />
             
             {/* Placeholder for Blood Pressure Trend - to be added later */}
-            <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-                <h3 className="text-lg font-semibold text-gray-800 mb-4">Blood Pressure Trend</h3>
-                <div className="text-center text-gray-500 py-8">
-                    <p>Blood Pressure Trend chart will be added here</p>
-                </div>
-            </div>
+            <BloodPressureTrendChart />
             
             {/* Placeholder for Weight History - to be added later */}
-            <div className="bg-white rounded-lg shadow-md p-6">
-                <h3 className="text-lg font-semibold text-gray-800 mb-4">Weight History</h3>
-                <div className="text-center text-gray-500 py-8">
-                    <p>Weight History chart will be added here</p>
-                </div>
-            </div>
+            <WeightHistoryChart />
 
             {/* Modals */}
             {showConditionModal && (
