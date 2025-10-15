@@ -1,6 +1,9 @@
 package com.lankamed.health.backend.dto.patient;
 
+import java.time.LocalDate;
+
 import com.lankamed.health.backend.model.patient.MedicalCondition;
+
 import lombok.Builder;
 import lombok.Data;
 

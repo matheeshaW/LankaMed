@@ -2,6 +2,8 @@ package com.lankamed.health.backend.model;
 
 import java.time.LocalDateTime;
 
+import com.lankamed.health.backend.model.patient.Patient;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;

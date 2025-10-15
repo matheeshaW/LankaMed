@@ -1,16 +1,15 @@
 package com.lankamed.health.backend.service;
 
-import com.lankamed.health.backend.dto.AppointmentDto;
-import com.lankamed.health.backend.model.patient.Patient;
-import com.lankamed.health.backend.repository.AppointmentRepository;
-import com.lankamed.health.backend.repository.patient.PatientRepository;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import com.lankamed.health.backend.dto.AppointmentDto;
 import com.lankamed.health.backend.repository.AppointmentRepository;
-import com.lankamed.health.backend.repository.PatientRepository;
+import com.lankamed.health.backend.repository.patient.PatientRepository;
 
 @Service
 public class AppointmentService {
