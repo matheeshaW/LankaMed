@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import api from '../../services/api';
 import { validatePatientForm } from '../../utils/validators';
+import JsBarcode from 'jsbarcode';
 
 const PersonalInformationCard = () => {
     const [profile, setProfile] = useState(null);
@@ -17,10 +18,29 @@ const PersonalInformationCard = () => {
         address: ''
     });
     const [errors, setErrors] = useState({});
+    const barcodeRef = useRef(null);
 
     useEffect(() => {
         fetchProfile();
     }, []);
+
+    useEffect(() => {
+        // render barcode whenever profile loads
+        if (barcodeRef.current && profile?.patientId) {
+            try {
+                // JsBarcode supports SVG element
+                JsBarcode(barcodeRef.current, String(profile.patientId), {
+                    format: 'CODE128',
+                    displayValue: true,
+                    fontSize: 10,
+                    height: 40,
+                    textMargin: 2
+                });
+            } catch (e) {
+                console.error('Barcode render error', e);
+            }
+        }
+    }, [profile]);
 
     const fetchProfile = async () => {
         try {
@@ -312,9 +332,11 @@ const PersonalInformationCard = () => {
                     </button>
                 </div>
             ) : (
-                <button className="w-full mt-6 bg-green-500 hover:bg-green-600 text-white font-medium py-2 px-4 rounded-lg transition-colors">
-                    View Personal Info
-                </button>
+                <div className="flex flex-col items-center mt-6">
+                    {/* Visible barcode for the patient ID - staff can scan this */}
+                    <svg ref={barcodeRef} />
+                    <div className="text-xs text-gray-500 mt-2">ID: {profile?.patientId || 'N/A'}</div>
+                </div>
             )}
 
             {/* Error Display */}
