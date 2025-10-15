@@ -4,6 +4,7 @@ import api from '../../services/api';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import html2canvas from 'html2canvas';
+import JsBarcode from 'jsbarcode';
 
 /**
  * DownloadReportsButton
@@ -100,6 +101,42 @@ const DownloadReportsButton = () => {
 
       // Patient summary card (right aligned small box)
       const p = data.profile || {};
+      // Generate barcode SVG for patient ID and insert on right side of header
+      const patientId = p.patientId || '';
+      if (patientId) {
+        try {
+          const svgNS = 'http://www.w3.org/2000/svg';
+          const svg = document.createElementNS(svgNS, 'svg');
+          JsBarcode(svg, String(patientId), { format: 'CODE128', displayValue: false, height: 40, margin: 0 });
+          // convert svg to png via canvas
+          const svgData = new XMLSerializer().serializeToString(svg);
+          const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+          const url = URL.createObjectURL(svgBlob);
+          /* eslint-disable no-await-in-loop */
+          const img = await new Promise((resolve, reject) => {
+            const image = new Image();
+            image.onload = () => resolve(image);
+            image.onerror = reject;
+            image.src = url;
+          });
+          // draw to canvas to get a PNG data URL (ensures compatibility)
+          const canvas = document.createElement('canvas');
+          canvas.width = img.width || 300;
+          canvas.height = img.height || 80;
+          const ctx = canvas.getContext('2d');
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          ctx.drawImage(img, 0, 0);
+          const dataUrl = canvas.toDataURL('image/png');
+          URL.revokeObjectURL(url);
+          // draw the barcode image on header (right side)
+          const barW = 120;
+          const barH = 32;
+          doc.addImage(dataUrl, 'PNG', pageWidth - marginLeft - barW, 8, barW, barH);
+        } catch (e) {
+          console.error('Error generating barcode for PDF', e);
+        }
+      }
       y = 70;
       y = addSectionHeader(doc, 'Personal Information', y, pageWidth);
       doc.setFontSize(11);
