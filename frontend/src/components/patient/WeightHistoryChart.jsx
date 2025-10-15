@@ -35,7 +35,7 @@ const WeightHistoryChart = () => {
     <div className="bg-white rounded-lg shadow-md p-6">
       <h3 className="text-lg font-semibold text-gray-800 mb-4">Weight History</h3>
       <Bar
-        height={300}
+        height={150}
         data={{
           labels,
           datasets: [
@@ -57,7 +57,7 @@ const WeightHistoryChart = () => {
           scales: {
             y: {
               title: { display: true, text: 'kg' },
-              min: 0
+              min: 20
             }
           },
         }}

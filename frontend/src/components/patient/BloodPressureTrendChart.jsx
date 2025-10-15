@@ -39,7 +39,7 @@ const BloodPressureTrendChart = () => {
     <div className="bg-white rounded-lg shadow-md p-6 mb-6">
       <h3 className="text-lg font-semibold text-gray-800 mb-4">Blood Pressure Trend</h3>
       <Line
-        height={300}
+        height={150}
         data={{
           labels,
           datasets: [
