@@ -1,8 +1,22 @@
 package com.lankamed.health.backend.service;
 
-import com.lankamed.health.backend.dto.*;
-import com.lankamed.health.backend.model.*;
-import com.lankamed.health.backend.repository.*;
+import com.lankamed.health.backend.dto.patient.MedicalConditionDto;
+import com.lankamed.health.backend.dto.patient.CreateMedicalConditionDto;
+import com.lankamed.health.backend.dto.patient.AllergyDto;
+import com.lankamed.health.backend.dto.patient.CreateAllergyDto;
+import com.lankamed.health.backend.dto.patient.PrescriptionDto;
+import com.lankamed.health.backend.repository.patient.PatientRepository;
+import com.lankamed.health.backend.repository.patient.MedicalConditionRepository;
+import com.lankamed.health.backend.repository.patient.AllergyRepository;
+import com.lankamed.health.backend.repository.patient.PrescriptionRepository;
+import com.lankamed.health.backend.service.patient.MedicalHistoryService;
+import com.lankamed.health.backend.model.User;
+import com.lankamed.health.backend.model.patient.Patient;
+import com.lankamed.health.backend.model.patient.MedicalCondition;
+import com.lankamed.health.backend.model.patient.Allergy;
+import com.lankamed.health.backend.model.patient.Prescription;
+import com.lankamed.health.backend.model.StaffDetails;
+import com.lankamed.health.backend.model.Role;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
