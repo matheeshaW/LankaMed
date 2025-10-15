@@ -1,12 +1,11 @@
 package com.lankamed.health.backend.dto;
 
+import java.time.LocalDate;
+
 import com.lankamed.health.backend.model.MedicalCondition;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
+
 import lombok.Builder;
 import lombok.Data;
-
-import java.time.LocalDate;
 
 @Data
 @Builder
