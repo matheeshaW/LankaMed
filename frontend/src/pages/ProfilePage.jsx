@@ -22,8 +22,11 @@ export default function ProfilePage() {
 				} else {
 					const res = await api.get('/api/users/me');
 					setProfile(res.data);
-					setFullName(res.data.fullName || '');
-					setPhone(res.data.phone || '');
+					setFullName(
+						res.data.fullName ||
+						[res.data.firstName, res.data.lastName].filter(Boolean).join(' ') ||
+						''
+					);
 				}
 			} catch (err) {
 				console.error('Failed to load profile for profile page', err);
@@ -36,12 +39,12 @@ export default function ProfilePage() {
 		const next = { fullName: '', phone: '', newPassword: '' };
 		if (!fullName.trim()) next.fullName = 'Full name is required';
 		else if (fullName.trim().length < 2) next.fullName = 'Full name must be at least 2 characters';
-		if (phone) {
+		if (getRole() === 'PATIENT' && phone) {
 			const re = /^[0-9+\-()\s]{7,20}$/;
 			if (!re.test(phone)) next.phone = 'Enter a valid phone number';
 		}
 		setErrors(next);
-		return !next.fullName && !next.phone;
+		return !next.fullName && (!next.phone || getRole() !== 'PATIENT');
 	};
 
 	const validatePassword = () => {
@@ -121,6 +124,7 @@ export default function ProfilePage() {
 											readOnly 
 										/>
 									</div>
+									{getRole() === 'PATIENT' && (
 									<div>
 										<label className="block text-sm font-medium text-gray-700 mb-2">Phone</label>
 										<input 
@@ -132,6 +136,7 @@ export default function ProfilePage() {
 										/>
 										{errors.phone && <div className="text-red-600 text-sm mt-1">{errors.phone}</div>}
 									</div>
+									)}
 									<button className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-200 hover:scale-105 hover:shadow-lg">
 										💾 Update Profile
 									</button>
