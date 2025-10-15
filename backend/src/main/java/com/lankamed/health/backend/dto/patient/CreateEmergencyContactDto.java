@@ -1,4 +1,4 @@
-package com.lankamed.health.backend.dto;
+package com.lankamed.health.backend.dto.patient;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;

@@ -1,6 +1,6 @@
-package com.lankamed.health.backend.repository;
+package com.lankamed.health.backend.repository.patient;
 
-import com.lankamed.health.backend.model.Prescription;
+import com.lankamed.health.backend.model.patient.Prescription;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

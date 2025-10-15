@@ -1,11 +1,11 @@
-package com.lankamed.health.backend.service;
+package com.lankamed.health.backend.service.patient;
 
-import com.lankamed.health.backend.dto.EmergencyContactDto;
-import com.lankamed.health.backend.dto.CreateEmergencyContactDto;
-import com.lankamed.health.backend.model.EmergencyContact;
-import com.lankamed.health.backend.model.Patient;
-import com.lankamed.health.backend.repository.EmergencyContactRepository;
-import com.lankamed.health.backend.repository.PatientRepository;
+import com.lankamed.health.backend.dto.patient.EmergencyContactDto;
+import com.lankamed.health.backend.dto.patient.CreateEmergencyContactDto;
+import com.lankamed.health.backend.model.patient.EmergencyContact;
+import com.lankamed.health.backend.repository.patient.EmergencyContactRepository;
+import com.lankamed.health.backend.repository.patient.PatientRepository;
+import com.lankamed.health.backend.model.patient.Patient;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -58,7 +58,6 @@ public class EmergencyContactService {
         EmergencyContact ec = emergencyContactRepository.findById(emergencyContactId)
                 .orElseThrow(() -> new RuntimeException("Emergency contact not found"));
 
-        // verify ownership
         String email = getCurrentUserEmail();
         if (!ec.getPatient().getUser().getEmail().equals(email)) {
             throw new RuntimeException("Unauthorized access to emergency contact");
@@ -79,7 +78,6 @@ public class EmergencyContactService {
         EmergencyContact ec = emergencyContactRepository.findById(emergencyContactId)
                 .orElseThrow(() -> new RuntimeException("Emergency contact not found"));
 
-        // verify ownership
         String email = getCurrentUserEmail();
         if (!ec.getPatient().getUser().getEmail().equals(email)) {
             throw new RuntimeException("Unauthorized access to emergency contact");

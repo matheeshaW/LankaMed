@@ -1,8 +1,8 @@
-package com.lankamed.health.backend.controller;
+package com.lankamed.health.backend.controller.patient;
 
-import com.lankamed.health.backend.dto.EmergencyContactDto;
-import com.lankamed.health.backend.dto.CreateEmergencyContactDto;
-import com.lankamed.health.backend.service.EmergencyContactService;
+import com.lankamed.health.backend.dto.patient.EmergencyContactDto;
+import com.lankamed.health.backend.dto.patient.CreateEmergencyContactDto;
+import com.lankamed.health.backend.service.patient.EmergencyContactService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

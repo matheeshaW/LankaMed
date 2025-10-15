@@ -1,8 +1,17 @@
-package com.lankamed.health.backend.service;
+package com.lankamed.health.backend.service.patient;
 
-import com.lankamed.health.backend.dto.*;
-import com.lankamed.health.backend.model.*;
-import com.lankamed.health.backend.repository.*;
+import com.lankamed.health.backend.dto.patient.PrescriptionDto;
+import com.lankamed.health.backend.dto.patient.AllergyDto;
+import com.lankamed.health.backend.dto.patient.CreateAllergyDto;
+import com.lankamed.health.backend.dto.patient.CreateMedicalConditionDto;
+import com.lankamed.health.backend.dto.patient.MedicalConditionDto;
+import com.lankamed.health.backend.repository.patient.AllergyRepository;
+import com.lankamed.health.backend.repository.patient.PatientRepository;
+import com.lankamed.health.backend.repository.patient.MedicalConditionRepository;
+import com.lankamed.health.backend.repository.patient.PrescriptionRepository;
+import com.lankamed.health.backend.model.patient.Patient;
+import com.lankamed.health.backend.model.patient.Allergy;
+import com.lankamed.health.backend.model.patient.MedicalCondition;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -19,17 +28,16 @@ public class MedicalHistoryService {
     private final AllergyRepository allergyRepository;
     private final PrescriptionRepository prescriptionRepository;
 
-    public MedicalHistoryService(PatientRepository patientRepository, 
-                                MedicalConditionRepository medicalConditionRepository,
-                                AllergyRepository allergyRepository,
-                                PrescriptionRepository prescriptionRepository) {
+    public MedicalHistoryService(PatientRepository patientRepository,
+                                 MedicalConditionRepository medicalConditionRepository,
+                                 AllergyRepository allergyRepository,
+                                 PrescriptionRepository prescriptionRepository) {
         this.patientRepository = patientRepository;
         this.medicalConditionRepository = medicalConditionRepository;
         this.allergyRepository = allergyRepository;
         this.prescriptionRepository = prescriptionRepository;
     }
 
-    // Medical Conditions
     public List<MedicalConditionDto> getMedicalConditions() {
         String email = getCurrentUserEmail();
         return medicalConditionRepository.findByPatientUserEmail(email)
@@ -60,7 +68,6 @@ public class MedicalHistoryService {
         MedicalCondition condition = medicalConditionRepository.findById(conditionId)
                 .orElseThrow(() -> new RuntimeException("Medical condition not found"));
 
-        // Verify ownership
         String email = getCurrentUserEmail();
         if (!condition.getPatient().getUser().getEmail().equals(email)) {
             throw new RuntimeException("Unauthorized access to medical condition");
@@ -79,7 +86,6 @@ public class MedicalHistoryService {
         MedicalCondition condition = medicalConditionRepository.findById(conditionId)
                 .orElseThrow(() -> new RuntimeException("Medical condition not found"));
 
-        // Verify ownership
         String email = getCurrentUserEmail();
         if (!condition.getPatient().getUser().getEmail().equals(email)) {
             throw new RuntimeException("Unauthorized access to medical condition");
@@ -88,7 +94,6 @@ public class MedicalHistoryService {
         medicalConditionRepository.delete(condition);
     }
 
-    // Allergies
     public List<AllergyDto> getAllergies() {
         String email = getCurrentUserEmail();
         return allergyRepository.findByPatientUserEmail(email)
@@ -119,7 +124,6 @@ public class MedicalHistoryService {
         Allergy allergy = allergyRepository.findById(allergyId)
                 .orElseThrow(() -> new RuntimeException("Allergy not found"));
 
-        // Verify ownership
         String email = getCurrentUserEmail();
         if (!allergy.getPatient().getUser().getEmail().equals(email)) {
             throw new RuntimeException("Unauthorized access to allergy");
@@ -138,7 +142,6 @@ public class MedicalHistoryService {
         Allergy allergy = allergyRepository.findById(allergyId)
                 .orElseThrow(() -> new RuntimeException("Allergy not found"));
 
-        // Verify ownership
         String email = getCurrentUserEmail();
         if (!allergy.getPatient().getUser().getEmail().equals(email)) {
             throw new RuntimeException("Unauthorized access to allergy");
@@ -147,7 +150,6 @@ public class MedicalHistoryService {
         allergyRepository.delete(allergy);
     }
 
-    // Prescriptions (read-only for patients)
     public List<PrescriptionDto> getPrescriptions() {
         String email = getCurrentUserEmail();
         return prescriptionRepository.findByPatientUserEmail(email)
@@ -161,3 +163,5 @@ public class MedicalHistoryService {
         return authentication.getName();
     }
 }
+
+

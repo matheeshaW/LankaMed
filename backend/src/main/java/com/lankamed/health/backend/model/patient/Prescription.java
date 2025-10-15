@@ -1,5 +1,6 @@
-package com.lankamed.health.backend.model;
+package com.lankamed.health.backend.model.patient;
 
+import com.lankamed.health.backend.model.StaffDetails;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -50,3 +51,5 @@ public class Prescription {
     @Column(name = "end_date")
     private LocalDate endDate;
 }
+
+

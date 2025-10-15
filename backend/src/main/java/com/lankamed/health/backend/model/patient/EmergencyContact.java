@@ -1,5 +1,6 @@
-package com.lankamed.health.backend.model;
+package com.lankamed.health.backend.model.patient;
 
+import com.lankamed.health.backend.model.patient.GenderConverter;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;

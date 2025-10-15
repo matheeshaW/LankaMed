@@ -1,6 +1,6 @@
-package com.lankamed.health.backend.dto;
+package com.lankamed.health.backend.dto.patient;
 
-import com.lankamed.health.backend.model.EmergencyContact;
+import com.lankamed.health.backend.model.patient.EmergencyContact;
 import lombok.Builder;
 import lombok.Data;
 

@@ -1,6 +1,6 @@
-package com.lankamed.health.backend.dto;
+package com.lankamed.health.backend.dto.patient;
 
-import com.lankamed.health.backend.model.Allergy;
+import com.lankamed.health.backend.model.patient.Allergy;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -18,3 +18,5 @@ public class CreateAllergyDto {
     @Size(max = 1000)
     private String notes;
 }
+
+
