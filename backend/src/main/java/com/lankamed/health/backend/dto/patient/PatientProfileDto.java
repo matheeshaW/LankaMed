@@ -1,6 +1,6 @@
-package com.lankamed.health.backend.dto;
+package com.lankamed.health.backend.dto.patient;
 
-import com.lankamed.health.backend.model.Patient;
+import com.lankamed.health.backend.model.patient.Patient;
 import lombok.Builder;
 import lombok.Data;
 
@@ -31,3 +31,5 @@ public class PatientProfileDto {
                 .build();
     }
 }
+
+

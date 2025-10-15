@@ -1,4 +1,4 @@
-package com.lankamed.health.backend.model;
+package com.lankamed.health.backend.model.patient;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
@@ -8,18 +8,20 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
+
 @Entity
-@Table(name = "allergies")
+@Table(name = "medical_conditions")
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Allergy {
+public class MedicalCondition {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "allergy_id")
-    private Long allergyId;
+    @Column(name = "condition_id")
+    private Long conditionId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "patient_id", nullable = false)
@@ -27,17 +29,14 @@ public class Allergy {
 
     @NotBlank
     @Size(max = 255)
-    @Column(name = "allergy_name", nullable = false)
-    private String allergyName;
+    @Column(name = "condition_name", nullable = false)
+    private String conditionName;
 
-    @Convert(converter = AllergySeverityConverter.class)
-    @Column(nullable = false)
-    private Severity severity;
+    @Column(name = "diagnosed_date")
+    private LocalDate diagnosedDate;
 
     @Lob
     private String notes;
-
-    public enum Severity {
-        MILD, MODERATE, SEVERE
-    }
 }
+
+

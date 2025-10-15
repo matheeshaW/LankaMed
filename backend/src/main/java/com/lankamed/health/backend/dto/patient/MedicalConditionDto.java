@@ -1,8 +1,6 @@
-package com.lankamed.health.backend.dto;
+package com.lankamed.health.backend.dto.patient;
 
-import com.lankamed.health.backend.model.MedicalCondition;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
+import com.lankamed.health.backend.model.patient.MedicalCondition;
 import lombok.Builder;
 import lombok.Data;
 
@@ -25,3 +23,5 @@ public class MedicalConditionDto {
                 .build();
     }
 }
+
+

@@ -1,10 +1,10 @@
-package com.lankamed.health.backend.service;
+package com.lankamed.health.backend.service.patient;
 
-import com.lankamed.health.backend.dto.PatientProfileDto;
-import com.lankamed.health.backend.dto.UpdatePatientProfileDto;
-import com.lankamed.health.backend.model.Patient;
+import com.lankamed.health.backend.model.patient.Patient;
+import com.lankamed.health.backend.repository.patient.PatientRepository;
+import com.lankamed.health.backend.dto.patient.PatientProfileDto;
+import com.lankamed.health.backend.dto.patient.UpdatePatientProfileDto;
 import com.lankamed.health.backend.model.User;
-import com.lankamed.health.backend.repository.PatientRepository;
 import com.lankamed.health.backend.repository.UserRepository;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -24,51 +24,43 @@ public class PatientService {
 
     public PatientProfileDto getPatientProfile() {
         String email = getCurrentUserEmail();
-    return patientRepository.findByUserEmail(email)
-        .map(PatientProfileDto::fromPatient)
-        .orElseGet(() -> {
-            // If patient row doesn't exist yet, try to build a DTO from the User record
-            return userRepository.findByEmail(email)
-                .map(user -> PatientProfileDto.builder()
-                    .patientId(user.getUserId())
-                    .firstName(user.getFirstName())
-                    .lastName(user.getLastName())
-                    .email(user.getEmail())
-                    .build())
-                .orElseThrow(() -> new RuntimeException("Patient not found"));
-        });
+        return patientRepository.findByUserEmail(email)
+            .map(PatientProfileDto::fromPatient)
+            .orElseGet(() -> {
+                return userRepository.findByEmail(email)
+                    .map(user -> PatientProfileDto.builder()
+                        .patientId(user.getUserId())
+                        .firstName(user.getFirstName())
+                        .lastName(user.getLastName())
+                        .email(user.getEmail())
+                        .build())
+                    .orElseThrow(() -> new RuntimeException("Patient not found"));
+            });
     }
 
     @Transactional
     public PatientProfileDto updatePatientProfile(UpdatePatientProfileDto updateDto) {
         String email = getCurrentUserEmail();
 
-        // Load existing patient if present
         Patient patient = patientRepository.findByUserEmail(email).orElse(null);
-
-        // Load user (should exist)
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found while updating patient"));
 
-        // Update user fields first (managed entity)
         user.setFirstName(updateDto.getFirstName());
         user.setLastName(updateDto.getLastName());
         user.setEmail(updateDto.getEmail());
         userRepository.save(user);
 
         if (patient == null) {
-            // Create a new Patient and link to managed user. Do NOT set patientId explicitly when using @MapsId.
             patient = new Patient();
             patient.setUser(user);
         }
 
-        // Update patient-specific fields
         patient.setDateOfBirth(updateDto.getDateOfBirth());
         patient.setGender(updateDto.getGender());
         patient.setContactNumber(updateDto.getContactNumber());
         patient.setAddress(updateDto.getAddress());
 
-        // Ensure relationship is up-to-date and save patient
         patient.setUser(user);
         patient = patientRepository.save(patient);
 
@@ -80,3 +72,5 @@ public class PatientService {
         return authentication.getName();
     }
 }
+
+

@@ -1,8 +1,8 @@
-package com.lankamed.health.backend.controller;
+package com.lankamed.health.backend.controller.patient;
 
-import com.lankamed.health.backend.dto.PatientProfileDto;
-import com.lankamed.health.backend.dto.UpdatePatientProfileDto;
-import com.lankamed.health.backend.service.PatientService;
+import com.lankamed.health.backend.dto.patient.PatientProfileDto;
+import com.lankamed.health.backend.dto.patient.UpdatePatientProfileDto;
+import com.lankamed.health.backend.service.patient.PatientService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -30,3 +30,5 @@ public class PatientController {
         return ResponseEntity.ok(updatedProfile);
     }
 }
+
+

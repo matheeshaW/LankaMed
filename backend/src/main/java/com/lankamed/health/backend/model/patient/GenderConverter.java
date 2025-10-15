@@ -1,4 +1,5 @@
-package com.lankamed.health.backend.model;
+package com.lankamed.health.backend.model.patient;
+import com.lankamed.health.backend.model.patient.Patient;
 
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;

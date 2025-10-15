@@ -1,4 +1,4 @@
-package com.lankamed.health.backend.dto;
+package com.lankamed.health.backend.dto.patient;
 
 import com.lankamed.health.backend.model.patient.Patient;
 import jakarta.validation.constraints.Email;
@@ -32,3 +32,5 @@ public class UpdatePatientProfileDto {
     @Size(max = 255)
     private String address;
 }
+
+

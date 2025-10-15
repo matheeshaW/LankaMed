@@ -1,4 +1,4 @@
-package com.lankamed.health.backend.model;
+package com.lankamed.health.backend.model.patient;
 
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
@@ -21,3 +21,5 @@ public class AllergySeverityConverter implements AttributeConverter<Allergy.Seve
         throw new IllegalArgumentException("Unknown severity: " + dbData);
     }
 }
+
+

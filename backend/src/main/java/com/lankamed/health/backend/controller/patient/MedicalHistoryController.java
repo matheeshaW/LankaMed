@@ -1,7 +1,11 @@
-package com.lankamed.health.backend.controller;
+package com.lankamed.health.backend.controller.patient;
 
-import com.lankamed.health.backend.dto.*;
-import com.lankamed.health.backend.service.MedicalHistoryService;
+import com.lankamed.health.backend.dto.patient.AllergyDto;
+import com.lankamed.health.backend.dto.patient.CreateAllergyDto;
+import com.lankamed.health.backend.dto.patient.CreateMedicalConditionDto;
+import com.lankamed.health.backend.dto.patient.MedicalConditionDto;
+import com.lankamed.health.backend.dto.patient.PrescriptionDto;
+import com.lankamed.health.backend.service.patient.MedicalHistoryService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,7 +23,6 @@ public class MedicalHistoryController {
         this.medicalHistoryService = medicalHistoryService;
     }
 
-    // Medical Conditions endpoints
     @GetMapping("/conditions")
     public ResponseEntity<List<MedicalConditionDto>> getMedicalConditions() {
         List<MedicalConditionDto> conditions = medicalHistoryService.getMedicalConditions();
@@ -46,7 +49,6 @@ public class MedicalHistoryController {
         return ResponseEntity.noContent().build();
     }
 
-    // Allergies endpoints
     @GetMapping("/allergies")
     public ResponseEntity<List<AllergyDto>> getAllergies() {
         List<AllergyDto> allergies = medicalHistoryService.getAllergies();
@@ -73,10 +75,11 @@ public class MedicalHistoryController {
         return ResponseEntity.noContent().build();
     }
 
-    // Prescriptions endpoints (read-only)
     @GetMapping("/prescriptions")
     public ResponseEntity<List<PrescriptionDto>> getPrescriptions() {
         List<PrescriptionDto> prescriptions = medicalHistoryService.getPrescriptions();
         return ResponseEntity.ok(prescriptions);
     }
 }
+
+

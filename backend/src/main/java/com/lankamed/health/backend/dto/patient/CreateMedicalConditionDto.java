@@ -1,4 +1,4 @@
-package com.lankamed.health.backend.dto;
+package com.lankamed.health.backend.dto.patient;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -17,3 +17,5 @@ public class CreateMedicalConditionDto {
     @Size(max = 1000)
     private String notes;
 }
+
+

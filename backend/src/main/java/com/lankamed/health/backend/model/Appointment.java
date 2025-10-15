@@ -1,5 +1,6 @@
 package com.lankamed.health.backend.model;
 
+import com.lankamed.health.backend.model.patient.Patient;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
