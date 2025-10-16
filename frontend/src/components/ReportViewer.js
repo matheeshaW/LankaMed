@@ -3,7 +3,7 @@ import DOMPurify from 'dompurify';
 
 const ReportViewer = ({ html, meta, onDownload, loading }) => {
   return (
-    <div className="bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
+    <div className="w-full">
       <div className="max-w-6xl mx-auto">
         {/* Header Section */}
         <div className="bg-white rounded-t-2xl shadow-lg px-8 py-6 border-b-2 border-indigo-200">

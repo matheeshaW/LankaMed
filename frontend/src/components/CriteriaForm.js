@@ -2,8 +2,8 @@ import React from 'react';
 
 const CriteriaForm = ({ criteria, onChange, onNext }) => {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-100 flex items-center justify-center p-6">
-      <div className="bg-white rounded-3xl shadow-2xl p-10 w-full max-w-2xl transform transition-all duration-300 hover:shadow-3xl border border-gray-100">
+    <div className="w-full">
+      <div className="bg-white rounded-2xl p-8 w-full max-w-2xl mx-auto">
         {/* Header with Icon */}
         <div className="text-center mb-10">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl mb-4 shadow-lg">

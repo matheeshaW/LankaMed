@@ -4,8 +4,8 @@ const AdvancedFilters = ({ filters, onChange, onNext }) => {
   const [showFilters, setShowFilters] = useState(false);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-100 flex items-center justify-center p-6">
-      <div className="bg-white rounded-3xl shadow-2xl p-10 w-full max-w-lg transform transition-all duration-500 hover:shadow-3xl border border-gray-100">
+    <div className="w-full">
+      <div className="bg-white rounded-2xl p-8 w-full max-w-lg mx-auto">
         {/* Step 1: Popup Message */}
         {!showFilters ? (
           <div className="text-center animate-fadeIn">

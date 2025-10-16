@@ -2,8 +2,8 @@ import React from 'react';
 
 const ReportSelector = ({ reportType, onChange, onNext }) => {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-100 flex items-center justify-center p-6">
-      <div className="bg-white rounded-3xl shadow-2xl p-10 w-full max-w-2xl transform transition-all duration-300 hover:shadow-3xl border border-gray-100">
+    <div className="w-full">
+      <div className="bg-white rounded-2xl p-8 w-full max-w-2xl mx-auto">
         {/* Header with Icon */}
         <div className="text-center mb-10">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl mb-4 shadow-lg">
@@ -19,11 +19,14 @@ const ReportSelector = ({ reportType, onChange, onNext }) => {
 
         <div className="space-y-5 mb-10">
           {/* Patient Visit Report */}
-          <label className={`relative flex items-start p-6 border-2 rounded-2xl cursor-pointer transition-all duration-200 group ${
-            reportType === 'PATIENT_VISIT'
-              ? 'border-indigo-500 bg-gradient-to-br from-indigo-50 to-purple-50 shadow-md'
-              : 'border-gray-200 hover:border-indigo-400 hover:bg-gradient-to-br hover:from-indigo-50 hover:to-purple-50 hover:shadow-md'
-          }`}>
+          <div 
+            onClick={() => onChange('PATIENT_VISIT')}
+            className={`relative flex items-start p-6 border-2 rounded-2xl cursor-pointer transition-all duration-200 group ${
+              reportType === 'PATIENT_VISIT'
+                ? 'border-indigo-500 bg-gradient-to-br from-indigo-50 to-purple-50 shadow-md'
+                : 'border-gray-200 hover:border-indigo-400 hover:bg-gradient-to-br hover:from-indigo-50 hover:to-purple-50 hover:shadow-md'
+            }`}
+          >
             <div className="flex items-start gap-4 flex-1">
               {/* Icon */}
               <div className={`flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center transition-all ${
@@ -52,24 +55,18 @@ const ReportSelector = ({ reportType, onChange, onNext }) => {
                   View comprehensive details of patient visits and appointments with statistical insights.
                 </p>
               </div>
-              
-              {/* Radio Button */}
-              <input
-                type="radio"
-                value="PATIENT_VISIT"
-                checked={reportType === 'PATIENT_VISIT'}
-                onChange={() => onChange('PATIENT_VISIT')}
-                className="mt-2 w-5 h-5 text-indigo-600 focus:ring-2 focus:ring-indigo-500 cursor-pointer"
-              />
             </div>
-          </label>
+          </div>
 
           {/* Service Utilization Report */}
-          <label className={`relative flex items-start p-6 border-2 rounded-2xl cursor-pointer transition-all duration-200 group ${
-            reportType === 'SERVICE_UTILIZATION'
-              ? 'border-indigo-500 bg-gradient-to-br from-indigo-50 to-purple-50 shadow-md'
-              : 'border-gray-200 hover:border-indigo-400 hover:bg-gradient-to-br hover:from-indigo-50 hover:to-purple-50 hover:shadow-md'
-          }`}>
+          <div 
+            onClick={() => onChange('SERVICE_UTILIZATION')}
+            className={`relative flex items-start p-6 border-2 rounded-2xl cursor-pointer transition-all duration-200 group ${
+              reportType === 'SERVICE_UTILIZATION'
+                ? 'border-indigo-500 bg-gradient-to-br from-indigo-50 to-purple-50 shadow-md'
+                : 'border-gray-200 hover:border-indigo-400 hover:bg-gradient-to-br hover:from-indigo-50 hover:to-purple-50 hover:shadow-md'
+            }`}
+          >
             <div className="flex items-start gap-4 flex-1">
               {/* Icon */}
               <div className={`flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center transition-all ${
@@ -98,17 +95,8 @@ const ReportSelector = ({ reportType, onChange, onNext }) => {
                   Analyze usage statistics and patterns for various hospital services and departments.
                 </p>
               </div>
-              
-              {/* Radio Button */}
-              <input
-                type="radio"
-                value="SERVICE_UTILIZATION"
-                checked={reportType === 'SERVICE_UTILIZATION'}
-                onChange={() => onChange('SERVICE_UTILIZATION')}
-                className="mt-2 w-5 h-5 text-indigo-600 focus:ring-2 focus:ring-indigo-500 cursor-pointer"
-              />
             </div>
-          </label>
+          </div>
         </div>
 
         {/* Next Button */}
