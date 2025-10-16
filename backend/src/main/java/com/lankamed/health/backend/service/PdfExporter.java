@@ -37,24 +37,40 @@ public class PdfExporter implements IPdfExporter {
     @Override
     public byte[] export(String html) {
         try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+            System.out.println("=== PdfExporter: Starting PDF export ===");
+            System.out.println("Input HTML length: " + html.length());
+            
             // Initialize Flying Saucer renderer
+            System.out.println("Initializing ITextRenderer...");
             ITextRenderer renderer = new ITextRenderer();
             
             // Wrap HTML in proper XHTML structure if needed
+            System.out.println("Ensuring XHTML structure...");
             String xhtml = ensureXhtmlStructure(html);
+            System.out.println("XHTML length: " + xhtml.length());
             
             // Set the HTML document
+            System.out.println("Setting document from string...");
             renderer.setDocumentFromString(xhtml);
             
             // Layout the document
+            System.out.println("Laying out document...");
             renderer.layout();
             
             // Create PDF
+            System.out.println("Creating PDF...");
             renderer.createPDF(outputStream);
             
-            return outputStream.toByteArray();
+            byte[] pdfBytes = outputStream.toByteArray();
+            System.out.println("=== PdfExporter: SUCCESS ===");
+            System.out.println("PDF size: " + pdfBytes.length + " bytes");
+            
+            return pdfBytes;
             
         } catch (Exception e) {
+            System.err.println("=== PdfExporter: FAILED ===");
+            System.err.println("Error: " + e.getClass().getName() + ": " + e.getMessage());
+            e.printStackTrace();
             throw new RuntimeException("PDF generation failed: " + e.getMessage(), e);
         }
     }

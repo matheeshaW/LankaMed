@@ -39,10 +39,29 @@ public class ServiceUtilizationDataProvider implements IReportDataProvider {
             if (criteria.get("from") != null && criteria.get("to") != null) {
                 Object fromObj = criteria.get("from");
                 Object toObj = criteria.get("to");
-                java.time.LocalDateTime fromDate = fromObj instanceof java.time.LocalDateTime ?
-                    (java.time.LocalDateTime) fromObj : java.time.LocalDateTime.parse(String.valueOf(fromObj));
-                java.time.LocalDateTime toDate = toObj instanceof java.time.LocalDateTime ?
-                    (java.time.LocalDateTime) toObj : java.time.LocalDateTime.parse(String.valueOf(toObj));
+                java.time.LocalDateTime fromDate;
+                java.time.LocalDateTime toDate;
+                
+                if (fromObj instanceof java.time.LocalDateTime) {
+                    fromDate = (java.time.LocalDateTime) fromObj;
+                } else {
+                    // Parse date-only string (YYYY-MM-DD) and set time to start of day
+                    String fromStr = String.valueOf(fromObj);
+                    fromDate = fromStr.contains("T") 
+                        ? java.time.LocalDateTime.parse(fromStr)
+                        : java.time.LocalDate.parse(fromStr).atStartOfDay();
+                }
+                
+                if (toObj instanceof java.time.LocalDateTime) {
+                    toDate = (java.time.LocalDateTime) toObj;
+                } else {
+                    // Parse date-only string (YYYY-MM-DD) and set time to end of day
+                    String toStr = String.valueOf(toObj);
+                    toDate = toStr.contains("T")
+                        ? java.time.LocalDateTime.parse(toStr)
+                        : java.time.LocalDate.parse(toStr).atTime(23, 59, 59);
+                }
+                
                 predicates.add(cb.between(root.get("visitDate"), fromDate, toDate));
             }
             return cb.and(predicates.toArray(new Predicate[0]));

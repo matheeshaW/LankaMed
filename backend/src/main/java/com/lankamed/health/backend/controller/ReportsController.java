@@ -86,19 +86,44 @@ public class ReportsController {
     @PostMapping("/download")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<byte[]> downloadReport(@RequestBody DownloadRequest request, Authentication authentication) {
-        String html;
-        if (request.html != null && !request.html.isBlank()) {
-            html = request.html;
-        } else if (request.reportType != null) {
-            ReportResponse rr = reportService.createReport(request.reportType, request.criteria, request.filters, authentication.getName());
-            html = rr.getHtml();
-        } else {
-            return ResponseEntity.badRequest().body(null);
+        try {
+            System.out.println("=== ReportsController: Download request received ===");
+            System.out.println("Has HTML: " + (request.html != null && !request.html.isBlank()));
+            System.out.println("Has reportType: " + (request.reportType != null));
+            
+            String html;
+            if (request.html != null && !request.html.isBlank()) {
+                html = request.html;
+                System.out.println("Using provided HTML, length: " + html.length());
+            } else if (request.reportType != null) {
+                System.out.println("Generating new report for type: " + request.reportType);
+                ReportResponse rr = reportService.createReport(request.reportType, request.criteria, request.filters, authentication.getName());
+                html = rr.getHtml();
+                System.out.println("Generated HTML, length: " + html.length());
+            } else {
+                System.out.println("ERROR: No HTML or reportType provided");
+                return ResponseEntity.badRequest().body(null);
+            }
+            
+            System.out.println("=== Converting to PDF ===");
+            byte[] bytes = reportService.exportReportToPdf(html);
+            System.out.println("PDF conversion successful, size: " + bytes.length + " bytes");
+            
+            HttpHeaders headers = new HttpHeaders();
+            headers.set(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=report.pdf");
+            headers.setContentType(MediaType.APPLICATION_PDF);
+            headers.set(HttpHeaders.CACHE_CONTROL, "no-cache, no-store, must-revalidate");
+            headers.set(HttpHeaders.PRAGMA, "no-cache");
+            headers.set(HttpHeaders.EXPIRES, "0");
+            // Note: CORS headers are already set by SecurityConfig, don't add them here
+            
+            System.out.println("=== Sending PDF response ===");
+            return ResponseEntity.ok().headers(headers).body(bytes);
+            
+        } catch (Exception e) {
+            System.err.println("=== ERROR in downloadReport ===");
+            e.printStackTrace();
+            throw new RuntimeException("PDF download failed: " + e.getMessage(), e);
         }
-        byte[] bytes = reportService.exportReportToPdf(html);
-        HttpHeaders headers = new HttpHeaders();
-        headers.set(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=report.pdf");
-        headers.setContentType(MediaType.APPLICATION_PDF);
-        return ResponseEntity.ok().headers(headers).body(bytes);
     }
 }

@@ -7,6 +7,12 @@ CREATE TABLE report_audit (
     generated_on DATETIME NOT NULL,
     success BOOLEAN NOT NULL,
     notes TEXT,
+    hospital_id VARCHAR(20),
+    service_category VARCHAR(50),
+    patient_category VARCHAR(50),
+    gender VARCHAR(10),
+    min_age INT,
+    max_age INT,
     CONSTRAINT fk_report_audit_user FOREIGN KEY (user_id) REFERENCES user(id)
 );
 

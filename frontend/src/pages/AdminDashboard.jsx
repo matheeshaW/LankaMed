@@ -52,7 +52,26 @@ export default function AdminDashboard() {
     setLoading(true);
     setError("");
     try {
-      const resp = await generateReport({ reportType, criteria, filters });
+      // Merge filters into criteria and convert age strings to integers
+      const mergedCriteria = {
+        ...criteria,
+        gender: filters.gender || criteria.gender,
+        minAge: filters.minAge ? parseInt(filters.minAge, 10) : (criteria.minAge ? parseInt(criteria.minAge, 10) : null),
+        maxAge: filters.maxAge ? parseInt(filters.maxAge, 10) : (criteria.maxAge ? parseInt(criteria.maxAge, 10) : null)
+      };
+      
+      // Remove null/undefined values
+      Object.keys(mergedCriteria).forEach(key => {
+        if (mergedCriteria[key] === null || mergedCriteria[key] === undefined || mergedCriteria[key] === '') {
+          delete mergedCriteria[key];
+        }
+      });
+      
+      const resp = await generateReport({ 
+        reportType, 
+        criteria: mergedCriteria, 
+        filters: filters 
+      });
       setReport(resp);
       setStep(3);
     } catch (e) {

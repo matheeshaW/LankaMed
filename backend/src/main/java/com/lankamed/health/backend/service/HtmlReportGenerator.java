@@ -35,16 +35,16 @@ public class HtmlReportGenerator implements IReportGenerator {
                 .append("    .header { text-align: center; border-bottom: 3px solid #4F46E5; padding-bottom: 20px; margin-bottom: 30px; }\n")
                 .append("    .header h1 { color: #4F46E5; font-size: 28px; margin: 10px 0; }\n")
                 .append("    .header p { color: #666; font-size: 14px; margin: 5px 0; }\n")
-                .append("    .section { margin-bottom: 25px; }\n")
+                .append("    .section { margin-bottom: 25px; page-break-inside: avoid; }\n")
                 .append("    .section h2 { color: #1F2937; font-size: 20px; border-bottom: 2px solid #E5E7EB; padding-bottom: 8px; margin-bottom: 15px; }\n")
-                .append("    .criteria-grid { display: table; width: 100%; border: 1px solid #E5E7EB; border-radius: 4px; }\n")
-                .append("    .criteria-row { display: table-row; }\n")
-                .append("    .criteria-label { display: table-cell; padding: 10px; background-color: #F9FAFB; font-weight: bold; border-bottom: 1px solid #E5E7EB; width: 30%; }\n")
-                .append("    .criteria-value { display: table-cell; padding: 10px; border-bottom: 1px solid #E5E7EB; }\n")
-                .append("    .kpi-container { display: table; width: 100%; }\n")
-                .append("    .kpi-box { display: table-cell; padding: 20px; margin: 10px; background: linear-gradient(135deg, #667EEA 0%, #764BA2 100%); color: white; border-radius: 8px; text-align: center; }\n")
-                .append("    .kpi-label { font-size: 14px; opacity: 0.9; margin-bottom: 8px; }\n")
-                .append("    .kpi-value { font-size: 32px; font-weight: bold; }\n")
+                .append("    .criteria-grid { width: 100%; border-collapse: collapse; border: 1px solid #E5E7EB; margin-bottom: 20px; }\n")
+                .append("    .criteria-grid td { padding: 10px; border: 1px solid #E5E7EB; }\n")
+                .append("    .criteria-label { background-color: #F9FAFB; font-weight: bold; width: 30%; }\n")
+                .append("    .criteria-value { background-color: white; }\n")
+                .append("    .kpi-table { width: 100%; border-collapse: collapse; }\n")
+                .append("    .kpi-table td { width: 48%; padding: 20px; margin: 5px; background-color: #667EEA; color: white; border: 2px solid #4F46E5; text-align: center; vertical-align: top; }\n")
+                .append("    .kpi-label { font-size: 16px; font-weight: bold; margin-bottom: 10px; display: block; }\n")
+                .append("    .kpi-value { font-size: 36px; font-weight: bold; display: block; margin-top: 10px; }\n")
                 .append("    .footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #E5E7EB; text-align: center; color: #6B7280; font-size: 12px; }\n")
                 .append("    pre#chartData { display: none; }\n")
                 .append("  </style>\n")
@@ -60,40 +60,55 @@ public class HtmlReportGenerator implements IReportGenerator {
             // Report Criteria Section
             html.append("  <div class=\"section\">\n")
                 .append("    <h2>Report Criteria</h2>\n")
-                .append("    <div class=\"criteria-grid\">\n");
+                .append("    <table class=\"criteria-grid\">\n");
             
-            appendCriteriaRow(html, "Date Range", 
+            appendCriteriaRowTable(html, "Date Range", 
                 metaCriteria.getOrDefault("from", "N/A") + " to " + metaCriteria.getOrDefault("to", "N/A"));
-            appendCriteriaRow(html, "Hospital ID", metaCriteria.getOrDefault("hospitalId", "All"));
-            appendCriteriaRow(html, "Service Category", metaCriteria.getOrDefault("serviceCategory", "All"));
-            appendCriteriaRow(html, "Patient Category", metaCriteria.getOrDefault("patientCategory", "All"));
-            appendCriteriaRow(html, "Gender", metaCriteria.getOrDefault("gender", "All"));
+            appendCriteriaRowTable(html, "Hospital ID", metaCriteria.getOrDefault("hospitalId", "All"));
+            appendCriteriaRowTable(html, "Service Category", metaCriteria.getOrDefault("serviceCategory", "All"));
+            appendCriteriaRowTable(html, "Patient Category", metaCriteria.getOrDefault("patientCategory", "All"));
+            appendCriteriaRowTable(html, "Gender", metaCriteria.getOrDefault("gender", "All"));
             
             Object minAge = metaCriteria.get("minAge");
             Object maxAge = metaCriteria.get("maxAge");
             String ageRange = (minAge != null || maxAge != null) 
                 ? (minAge != null ? minAge : "0") + " - " + (maxAge != null ? maxAge : "∞")
                 : "All";
-            appendCriteriaRow(html, "Age Range", ageRange);
+            appendCriteriaRowTable(html, "Age Range", ageRange);
             
-            html.append("    </div>\n")
+            html.append("    </table>\n")
                 .append("  </div>\n");
             
             // KPI Section
             html.append("  <div class=\"section\">\n")
                 .append("    <h2>Key Performance Indicators</h2>\n")
-                .append("    <div class=\"kpi-container\">\n");
+                .append("    <table class=\"kpi-table\">\n");
             
+            int count = 0;
             for (Map.Entry<String, Object> entry : data.entrySet()) {
+                if (count % 2 == 0) {
+                    html.append("      <tr>\n");
+                }
+                
                 String label = formatLabel(entry.getKey());
                 String value = String.valueOf(entry.getValue());
-                html.append("      <div class=\"kpi-box\">\n")
-                    .append("        <div class=\"kpi-label\">").append(label).append("</div>\n")
-                    .append("        <div class=\"kpi-value\">").append(value).append("</div>\n")
-                    .append("      </div>\n");
+                html.append("        <td>\n")
+                    .append("          <span class=\"kpi-label\">").append(label).append("</span>\n")
+                    .append("          <span class=\"kpi-value\">").append(value).append("</span>\n")
+                    .append("        </td>\n");
+                
+                count++;
+                if (count % 2 == 0 || count == data.size()) {
+                    // Close row if we have 2 KPIs or it's the last one
+                    if (count % 2 == 1 && count == data.size()) {
+                        // Add empty cell if odd number of KPIs
+                        html.append("        <td></td>\n");
+                    }
+                    html.append("      </tr>\n");
+                }
             }
             
-            html.append("    </div>\n")
+            html.append("    </table>\n")
                 .append("  </div>\n");
             
             // Hidden chart data for frontend rendering
@@ -114,13 +129,13 @@ public class HtmlReportGenerator implements IReportGenerator {
     }
     
     /**
-     * Helper method to append a criteria row to HTML
+     * Helper method to append a criteria row to HTML table
      */
-    private void appendCriteriaRow(StringBuilder html, String label, Object value) {
-        html.append("      <div class=\"criteria-row\">\n")
-            .append("        <div class=\"criteria-label\">").append(label).append(":</div>\n")
-            .append("        <div class=\"criteria-value\">").append(value != null ? value : "N/A").append("</div>\n")
-            .append("      </div>\n");
+    private void appendCriteriaRowTable(StringBuilder html, String label, Object value) {
+        html.append("      <tr class=\"criteria-row\">\n")
+            .append("        <td class=\"criteria-label\">").append(label).append(":</td>\n")
+            .append("        <td class=\"criteria-value\">").append(value != null ? value : "N/A").append("</td>\n")
+            .append("      </tr>\n");
     }
     
     /**

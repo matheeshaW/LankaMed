@@ -62,10 +62,29 @@ public class PatientVisitDataProvider implements IReportDataProvider {
             if (criteria.get("from") != null && criteria.get("to") != null) {
                 Object fromObj = criteria.get("from");
                 Object toObj = criteria.get("to");
-                LocalDateTime fromDate = fromObj instanceof LocalDateTime ?
-                    (LocalDateTime) fromObj : LocalDateTime.parse(String.valueOf(fromObj));
-                LocalDateTime toDate = toObj instanceof LocalDateTime ?
-                    (LocalDateTime) toObj : LocalDateTime.parse(String.valueOf(toObj));
+                LocalDateTime fromDate;
+                LocalDateTime toDate;
+                
+                if (fromObj instanceof LocalDateTime) {
+                    fromDate = (LocalDateTime) fromObj;
+                } else {
+                    // Parse date-only string (YYYY-MM-DD) and set time to start of day
+                    String fromStr = String.valueOf(fromObj);
+                    fromDate = fromStr.contains("T") 
+                        ? LocalDateTime.parse(fromStr)
+                        : java.time.LocalDate.parse(fromStr).atStartOfDay();
+                }
+                
+                if (toObj instanceof LocalDateTime) {
+                    toDate = (LocalDateTime) toObj;
+                } else {
+                    // Parse date-only string (YYYY-MM-DD) and set time to end of day
+                    String toStr = String.valueOf(toObj);
+                    toDate = toStr.contains("T")
+                        ? LocalDateTime.parse(toStr)
+                        : java.time.LocalDate.parse(toStr).atTime(23, 59, 59);
+                }
+                
                 predicates.add(cb.between(root.get("visitDate"), fromDate, toDate));
             }
             return cb.and(predicates.toArray(new Predicate[0]));
