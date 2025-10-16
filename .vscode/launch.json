@@ -1,0 +1,41 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Current File",
+            "request": "launch",
+            "mainClass": "${file}"
+        },
+        {
+            "type": "java",
+            "name": "BackendApplication",
+            "request": "launch",
+            "mainClass": "com.lankamed.health.backend.BackendApplication",
+            "projectName": "backend"
+        },
+        {
+            "type": "java",
+            "name": "Debug Tests",
+            "request": "launch",
+            "mainClass": "",
+            "projectName": "backend",
+            "args": "test -Dtest=ReportsControllerUnitTest",
+            "vmArgs": "",
+            "console": "integratedTerminal"
+        },
+        {
+            "type": "java",
+            "name": "Run All Tests",
+            "request": "launch",
+            "mainClass": "",
+            "projectName": "backend",
+            "args": "test",
+            "vmArgs": "",
+            "console": "integratedTerminal"
+        }
+    ]
+}
