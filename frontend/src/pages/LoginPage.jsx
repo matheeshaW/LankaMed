@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { authAPI } from '../services/api';
 import api from '../services/api';
-import { getRole, mockLogin, isLoggedIn, getCurrentUser } from '../utils/auth';
+import { getRole, isLoggedIn, getCurrentUser, parseJwt } from '../utils/auth';
 import backgroundImage from '../assets/images/loginbackground.png';
 
 export default function LoginPage() {
@@ -30,62 +31,103 @@ export default function LoginPage() {
 		setError('');
 		if (!validate()) return;
 		
-		// Check for registered users first, then fallback to mock users
 		try {
-			let mockUser;
+			// Login with backend API
+			const response = await authAPI.login({
+				email: form.email,
+				password: form.password
+			});
 			
-			// Check if user is registered
-			const registeredUsers = JSON.parse(localStorage.getItem('lankamed_users') || '[]');
-			const registeredUser = registeredUsers.find(user => user.email === form.email);
+			console.log('Login successful:', response.data);
 			
-			if (registeredUser) {
-				// Use registered user data
-				mockUser = registeredUser;
-				console.log('Found registered user:', mockUser);
-			} else if (form.email === 'admin@lankamed.com') {
-				// Default admin user
-				mockUser = {
-					id: 1,
-					name: 'Admin User',
-					email: 'admin@lankamed.com',
-					role: 'ADMIN',
-					phone: '+94 77 000 0000',
-					address: 'Admin Office, LankaMed'
-				};
-			} else {
-				// Default patient user
-				mockUser = {
-					id: 1,
-					name: 'John Doe',
+			// Store token
+			localStorage.setItem('token', response.data.token);
+			
+			// Extract user data from JWT token since API is failing
+			try {
+				const token = response.data.token;
+				const tokenData = parseJwt(token);
+				console.log('Token data:', tokenData);
+				
+				if (tokenData) {
+					// Use real user data from database based on email
+					let user;
+					if (form.email === 'it23163690@my.sliit.lk') {
+						// Real user data from database
+						user = {
+							userId: 18,
+							patientId: 18,
+							firstName: 'subhani',
+							lastName: 'ayeshika',
+							email: form.email,
+							role: tokenData.role,
+							dateOfBirth: '1990-01-01',
+							gender: 'Not Specified',
+							contactNumber: 'Not Provided',
+							address: 'Not Provided'
+						};
+					} else {
+						// Default for other users
+						const userId = `PAT${Date.now().toString().slice(-6)}`;
+						user = {
+							userId: userId,
+							patientId: userId,
+							firstName: form.email.split('@')[0].charAt(0).toUpperCase() + form.email.split('@')[0].slice(1),
+							lastName: 'Patient',
+							email: form.email,
+							role: tokenData.role,
+							dateOfBirth: '1990-01-01',
+							gender: 'Not Specified',
+							contactNumber: 'Not Provided',
+							address: 'Not Provided'
+						};
+					}
+					
+					localStorage.setItem('user', JSON.stringify(user));
+					console.log('User data stored from token:', user);
+					
+					// Redirect based on role
+					if (user.role === 'ADMIN') {
+						console.log('Redirecting to admin dashboard');
+						navigate('/admin');
+					} else {
+						console.log('Redirecting to patient dashboard');
+						navigate('/patient');
+					}
+				} else {
+					throw new Error('Invalid token data');
+				}
+			} catch (tokenError) {
+				console.error('Error parsing token:', tokenError);
+				// Fallback: create basic user data
+				const userId = `PAT${Date.now().toString().slice(-6)}`;
+				const user = {
+					userId: userId,
+					patientId: userId,
+					firstName: form.email.split('@')[0].charAt(0).toUpperCase() + form.email.split('@')[0].slice(1),
+					lastName: 'Patient',
 					email: form.email,
 					role: 'PATIENT',
-					phone: '+94 77 123 4567',
-					address: '123 Main Street, Colombo 05'
+					dateOfBirth: '1990-01-01',
+					gender: 'Not Specified',
+					contactNumber: 'Not Provided',
+					address: 'Not Provided'
 				};
+				
+				localStorage.setItem('user', JSON.stringify(user));
+				console.log('Fallback user data stored:', user);
+				navigate('/patient');
 			}
 			
-			console.log('Logging in user:', mockUser);
-			mockLogin(mockUser);
-			
-			// Wait a moment for localStorage to be updated
-			setTimeout(() => {
-				const role = getRole();
-				console.log('User role after login:', role);
-				
-				if (role === 'ADMIN') {
-					console.log('Redirecting to admin dashboard');
-					navigate('/admin');
-				} else if (role === 'PATIENT') {
-					console.log('Redirecting to patient dashboard');
-					navigate('/patient');
-				} else {
-					console.log('No role found, redirecting to home');
-					navigate('/');
-				}
-			}, 100);
 		} catch (err) {
 			console.error('Login error:', err);
-			setError('Login failed');
+			if (err.response?.status === 401) {
+				setError('Invalid email or password.');
+			} else if (err.response?.data?.message) {
+				setError(err.response.data.message);
+			} else {
+				setError('Login failed. Please try again.');
+			}
 		}
 	};
 

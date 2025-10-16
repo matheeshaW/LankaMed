@@ -145,3 +145,6 @@ spring.jpa.hibernate.ddl-auto=create-drop
 - Appointments and medical records remain intact
 - Smart initialization only runs when needed
 
+
+
+

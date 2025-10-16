@@ -3,6 +3,7 @@ package com.lankamed.health.backend.controller;
 import com.lankamed.health.backend.dto.CreateReviewDto;
 import com.lankamed.health.backend.dto.ReviewDto;
 import com.lankamed.health.backend.service.ReviewService;
+import org.springframework.web.bind.annotation.RequestParam;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -30,5 +31,11 @@ public class ReviewController {
     public ResponseEntity<List<ReviewDto>> getDoctorReviews(@PathVariable Long doctorId) {
         List<ReviewDto> reviews = reviewService.getDoctorReviews(doctorId);
         return ResponseEntity.ok(reviews);
+    }
+
+    @GetMapping("/doctors/{doctorId}/review-stats")
+    public ResponseEntity<?> getDoctorReviewStats(@PathVariable Long doctorId) {
+        var stats = reviewService.getDoctorReviewStats(doctorId);
+        return ResponseEntity.ok(stats);
     }
 }

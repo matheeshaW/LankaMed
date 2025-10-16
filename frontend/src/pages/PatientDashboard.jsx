@@ -1,22 +1,32 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getRole, logout } from '../utils/auth';
-import PatientProfile from '../components/patient/PatientProfile';
-import MedicalHistory from '../components/patient/MedicalHistory';
 import PersonalInformationCard from '../components/patient/PersonalInformationCard';
 import EmergencyContactCard from '../components/patient/EmergencyContactCard';
 import MedicalHistoryCard from '../components/patient/MedicalHistoryCard';
 import DownloadReportsButton from '../components/patient/DownloadReportsButton';
+import HealthMetricsCard from '../components/patient/HealthMetricsCard';
+import UserAppointments from '../components/patient/UserAppointments';
+import WaitingListCard from '../components/patient/WaitingListCard';
 
 const PatientDashboard = () => {
     const navigate = useNavigate();
 
     useEffect(() => {
         const role = getRole();
-        console.log('PatientDashboard - checking role:', role);
-        if (role !== 'PATIENT') {
-            console.log('Not a patient, redirecting to login');
+        const isLoggedIn = Boolean(localStorage.getItem('token'));
+        console.log('PatientDashboard - checking role:', role, 'isLoggedIn:', isLoggedIn);
+        
+        if (!isLoggedIn) {
+            console.log('Not logged in, redirecting to login');
             navigate('/login');
+        } else if (role && role !== 'PATIENT') {
+            console.log('Not a patient, redirecting to appropriate dashboard');
+            if (role === 'ADMIN') {
+                navigate('/admin');
+            } else {
+                navigate('/login');
+            }
         }
     }, [navigate]);
 
@@ -29,17 +39,38 @@ const PatientDashboard = () => {
 
     const tabs = [
         { id: 'profile', label: 'My Profile', icon: '👤' },
-        { id: 'medical', label: 'Medical History', icon: '🏥' }
+        { id: 'medical', label: 'Medical History', icon: '🏥' },
+        { id: 'appointments', label: 'Appointments', icon: '📅' },
+        { id: 'waiting', label: 'Waiting List', icon: '⏳' },
+        { id: 'health', label: 'Health Metrics', icon: '📊' }
     ];
 
     const renderActiveTab = () => {
         switch (activeTab) {
             case 'profile':
-                return <PatientProfile />;
+                return (
+                    <div className="space-y-6">
+                        <PersonalInformationCard />
+                        <EmergencyContactCard />
+                        <DownloadReportsButton />
+                    </div>
+                );
             case 'medical':
-                return <MedicalHistory />;
+                return <MedicalHistoryCard />;
+            case 'appointments':
+                return <UserAppointments />;
+            case 'waiting':
+                return <WaitingListCard />;
+            case 'health':
+                return <HealthMetricsCard />;
             default:
-                return <PatientProfile />;
+                return (
+                    <div className="space-y-6">
+                        <PersonalInformationCard />
+                        <EmergencyContactCard />
+                        <DownloadReportsButton />
+                    </div>
+                );
         }
     };
     return (

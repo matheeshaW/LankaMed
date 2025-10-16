@@ -2,6 +2,7 @@ import { Link, Routes, Route, Navigate } from 'react-router-dom';
 import AdminUsers from './AdminUsers';
 import CategoryPage from './CategoryPage';
 import AdminAppointments from '../components/admin/AdminAppointments';
+import AdminWaitlist from '../components/admin/AdminWaitlist';
 import { getRole } from '../utils/auth';
 
 export default function AdminDashboard() {
@@ -43,6 +44,13 @@ export default function AdminDashboard() {
 								<span className="text-xl">📅</span>
 								<span className="font-medium group-hover:translate-x-1 transition-transform duration-200">Appointments</span>
 							</Link>
+							<Link 
+								to="waitlist" 
+								className="flex items-center space-x-3 px-4 py-3 text-gray-700 rounded-lg hover:bg-blue-50 hover:text-blue-700 transition-all duration-200 group"
+							>
+								<span className="text-xl">⏳</span>
+								<span className="font-medium group-hover:translate-x-1 transition-transform duration-200">Waiting List</span>
+							</Link>
 						</nav>
 					</div>
 				</aside>
@@ -53,6 +61,7 @@ export default function AdminDashboard() {
 						<Route path="users" element={<AdminUsers />} />
 						<Route path="categories" element={<CategoryPage />} />
 						<Route path="appointments" element={<AdminAppointments />} />
+						<Route path="waitlist" element={<AdminWaitlist />} />
 						<Route index element={
 							<div className="max-w-4xl mx-auto">
 								<div className="bg-white rounded-2xl shadow-xl overflow-hidden">
@@ -61,7 +70,7 @@ export default function AdminDashboard() {
 										<p className="text-blue-100 mt-2">Manage your platform from the admin dashboard</p>
 									</div>
 									<div className="p-8">
-										<div className="grid md:grid-cols-3 gap-6">
+										<div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
 											<div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-6 rounded-xl border border-blue-200">
 												<div className="flex items-center space-x-4">
 													<div className="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center">
@@ -113,6 +122,24 @@ export default function AdminDashboard() {
 													className="inline-flex items-center mt-4 text-purple-600 hover:text-purple-800 font-medium transition-colors duration-200"
 												>
 													Go to Appointments <span className="ml-1">→</span>
+												</Link>
+											</div>
+
+											<div className="bg-gradient-to-br from-orange-50 to-red-50 p-6 rounded-xl border border-orange-200">
+												<div className="flex items-center space-x-4">
+													<div className="w-12 h-12 bg-orange-600 rounded-lg flex items-center justify-center">
+														<span className="text-white text-2xl">⏳</span>
+													</div>
+													<div>
+														<h3 className="text-lg font-semibold text-gray-800">Waiting List</h3>
+														<p className="text-gray-600">Manage patient waiting list entries and approvals</p>
+													</div>
+												</div>
+												<Link 
+													to="waitlist" 
+													className="inline-flex items-center mt-4 text-orange-600 hover:text-orange-800 font-medium transition-colors duration-200"
+												>
+													Go to Waiting List <span className="ml-1">→</span>
 												</Link>
 											</div>
 										</div>

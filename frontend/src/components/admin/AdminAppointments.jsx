@@ -1,37 +1,69 @@
 import React, { useState, useEffect } from 'react';
-import { mockAppointments, updateAppointmentStatus } from '../../data/mockData';
+import { appointmentAPI } from '../../services/api';
+import api from '../../services/api';
 
 const AdminAppointments = () => {
-  const [appointments, setAppointments] = useState(mockAppointments);
-  const [filteredAppointments, setFilteredAppointments] = useState(mockAppointments);
+  const [appointments, setAppointments] = useState([]);
+  const [filteredAppointments, setFilteredAppointments] = useState([]);
   const [filter, setFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState('date');
   const [sortOrder, setSortOrder] = useState('desc');
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+  const [loading, setLoading] = useState(false);
+  useEffect(() => {
+    loadAppointments();
+  }, []);
+
 
   useEffect(() => {
     filterAndSortAppointments();
   }, [appointments, filter, searchTerm, sortBy, sortOrder]);
 
+  const loadAppointments = async () => {
+    setLoading(true);
+    try {
+      const response = await appointmentAPI.getAllAppointments();
+      if (response.data.success) {
+        setAppointments(response.data.appointments);
+      } else {
+        console.error('Error loading appointments:', response.data.error);
+        setErrorMessage('Failed to load appointments');
+        setTimeout(() => setErrorMessage(''), 3000);
+      }
+    } catch (error) {
+      console.error('Error loading appointments:', error);
+      setErrorMessage('Failed to load appointments');
+      setTimeout(() => setErrorMessage(''), 3000);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const filterAndSortAppointments = () => {
+    if (!Array.isArray(appointments)) {
+      setFilteredAppointments([]);
+      return;
+    }
+    
     let filtered = [...appointments];
 
-    // Filter by status
+    // Filter by status (priority items will be shown only in priority box, not here)
     if (filter !== 'all') {
       filtered = filtered.filter(appointment => appointment.status === filter);
     }
+    // Exclude priority appointments from the main list
+    filtered = filtered.filter(a => a.priority !== true);
 
     // Filter by search term
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
       filtered = filtered.filter(appointment =>
-        appointment.patientName.toLowerCase().includes(term) ||
         appointment.doctorName.toLowerCase().includes(term) ||
         appointment.doctorSpecialization.toLowerCase().includes(term) ||
         appointment.hospitalName.toLowerCase().includes(term) ||
-        appointment.reason.toLowerCase().includes(term)
+        appointment.serviceCategoryName.toLowerCase().includes(term)
       );
     }
 
@@ -41,12 +73,8 @@ const AdminAppointments = () => {
       
       switch (sortBy) {
         case 'date':
-          aValue = new Date(a.appointmentDate);
-          bValue = new Date(b.appointmentDate);
-          break;
-        case 'patient':
-          aValue = a.patientName.toLowerCase();
-          bValue = b.patientName.toLowerCase();
+          aValue = new Date(a.appointmentDateTime);
+          bValue = new Date(b.appointmentDateTime);
           break;
         case 'doctor':
           aValue = a.doctorName.toLowerCase();
@@ -70,21 +98,24 @@ const AdminAppointments = () => {
     setFilteredAppointments(filtered);
   };
 
-  const handleStatusUpdate = (appointmentId, newStatus) => {
+  const handleStatusUpdate = async (appointmentId, newStatus) => {
     try {
-      const updatedAppointment = updateAppointmentStatus(appointmentId, newStatus);
-      if (updatedAppointment) {
-        setAppointments(prev => 
-          prev.map(apt => 
-            apt.id === appointmentId ? updatedAppointment : apt
-          )
-        );
-        setSuccessMessage(`Appointment #${appointmentId} status updated to ${newStatus}`);
-        setTimeout(() => setSuccessMessage(''), 3000);
+      const response = await appointmentAPI.updateAppointmentStatus(appointmentId, String(newStatus).toUpperCase());
+      const ok = response.status >= 200 && response.status < 300;
+      const payload = response?.data || {};
+      if (ok && (payload.success === true || payload.status)) {
+        const nextStatus = (payload.status || newStatus).toString().toUpperCase();
+        setAppointments(prev => prev.map(apt => (
+          apt.appointmentId === appointmentId ? { ...apt, status: nextStatus } : apt
+        )));
+        setSuccessMessage(`Appointment #${appointmentId} status updated to ${nextStatus}`);
+        setTimeout(() => setSuccessMessage(''), 2500);
+      } else {
+        throw new Error(payload.error || 'Update failed');
       }
     } catch (error) {
       console.error('Error updating appointment status:', error);
-      setErrorMessage('Failed to update appointment status');
+      setErrorMessage(error?.response?.data?.error || error?.message || 'Failed to update appointment status');
       setTimeout(() => setErrorMessage(''), 3000);
     }
   };
@@ -97,8 +128,6 @@ const AdminAppointments = () => {
         return 'bg-blue-100 text-blue-800 border-blue-200';
       case 'CONFIRMED':
         return 'bg-green-100 text-green-800 border-green-200';
-      case 'REJECTED':
-        return 'bg-red-100 text-red-800 border-red-200';
       case 'COMPLETED':
         return 'bg-emerald-100 text-emerald-800 border-emerald-200';
       case 'CANCELLED':
@@ -110,14 +139,10 @@ const AdminAppointments = () => {
 
   const getStatusText = (status) => {
     switch (status) {
-      case 'PENDING':
-        return 'Pending';
       case 'APPROVED':
         return 'Approved';
       case 'CONFIRMED':
         return 'Confirmed';
-      case 'REJECTED':
-        return 'Rejected';
       case 'COMPLETED':
         return 'Completed';
       case 'CANCELLED':
@@ -129,14 +154,10 @@ const AdminAppointments = () => {
 
   const getStatusIcon = (status) => {
     switch (status) {
-      case 'PENDING':
-        return '⏳';
       case 'APPROVED':
         return '✅';
       case 'CONFIRMED':
         return '📅';
-      case 'REJECTED':
-        return '❌';
       case 'COMPLETED':
         return '🎉';
       case 'CANCELLED':
@@ -146,8 +167,8 @@ const AdminAppointments = () => {
     }
   };
 
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
+  const formatDate = (dateTimeString) => {
+    return new Date(dateTimeString).toLocaleDateString('en-US', {
       weekday: 'short',
       year: 'numeric',
       month: 'short',
@@ -155,8 +176,8 @@ const AdminAppointments = () => {
     });
   };
 
-  const formatTime = (timeString) => {
-    return new Date(`2000-01-01T${timeString}`).toLocaleTimeString('en-US', {
+  const formatTime = (dateTimeString) => {
+    return new Date(dateTimeString).toLocaleTimeString('en-US', {
       hour: '2-digit',
       minute: '2-digit',
       hour12: true
@@ -165,10 +186,7 @@ const AdminAppointments = () => {
 
   const getStatusCounts = () => {
     const counts = {
-      PENDING: 0,
-      APPROVED: 0,
-      CONFIRMED: 0,
-      REJECTED: 0,
+      SCHEDULED: 0,
       COMPLETED: 0,
       CANCELLED: 0
     };
@@ -214,6 +232,7 @@ const AdminAppointments = () => {
         ))}
       </div>
 
+
       {/* Filters and Search */}
       <div className="bg-white rounded-2xl shadow-lg p-6">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
@@ -244,8 +263,8 @@ const AdminAppointments = () => {
               <option value="PENDING">Pending</option>
               <option value="APPROVED">Approved</option>
               <option value="CONFIRMED">Confirmed</option>
-              <option value="REJECTED">Rejected</option>
               <option value="COMPLETED">Completed</option>
+              <option value="REJECTED">Rejected</option>
               <option value="CANCELLED">Cancelled</option>
             </select>
           </div>
@@ -275,7 +294,7 @@ const AdminAppointments = () => {
 
             <button
               onClick={() => {
-                setAppointments([...mockAppointments]);
+                loadAppointments();
                 setSearchTerm('');
                 setFilter('all');
               }}
@@ -284,6 +303,42 @@ const AdminAppointments = () => {
               Refresh
             </button>
           </div>
+        </div>
+      </div>
+
+      {/* Priority Appointments */}
+      <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+        <div className="px-6 py-4 border-b border-gray-200">
+          <h3 className="text-lg font-semibold text-gray-800">Priority Appointments</h3>
+        </div>
+        <div className="p-4">
+          {Array.isArray(appointments) && appointments.filter(a=>a.priority === true).length > 0 ? (
+            <ul className="space-y-3">
+              {appointments.filter(a=>a.priority === true).map((apt)=> (
+                <li key={`p-${apt.appointmentId}`} className="flex items-center justify-between p-3 border rounded-lg bg-yellow-50">
+                  <div>
+                    <div className="font-medium text-gray-900">#{apt.appointmentId} • {apt.doctorName}</div>
+                    <div className="text-sm text-gray-600">{formatDate(apt.appointmentDateTime)} {formatTime(apt.appointmentDateTime)} • {apt.hospitalName}</div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="px-2 py-1 text-xs rounded bg-yellow-200 text-yellow-800 border border-yellow-300">PRIORITY</span>
+                    <select
+                      value={apt.status}
+                      onChange={(e)=>handleStatusUpdate(apt.appointmentId, e.target.value)}
+                      className="px-3 py-1 border border-yellow-300 rounded-lg bg-white focus:ring-2 focus:ring-yellow-400 focus:border-transparent text-sm"
+                    >
+                      <option value="APPROVED">Approved</option>
+                      <option value="CONFIRMED">Confirmed</option>
+                      <option value="COMPLETED">Completed</option>
+                      <option value="CANCELLED">Cancelled</option>
+                    </select>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <div className="text-gray-500 text-sm">No priority requests.</div>
+          )}
         </div>
       </div>
 
@@ -312,7 +367,7 @@ const AdminAppointments = () => {
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Patient
+                    Appointment ID
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Doctor
@@ -333,18 +388,18 @@ const AdminAppointments = () => {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {filteredAppointments.map((appointment) => (
-                  <tr key={appointment.id} className="hover:bg-gray-50 transition-colors duration-200">
+                  <tr key={appointment.appointmentId} className="hover:bg-gray-50 transition-colors duration-200">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold mr-3">
-                          {appointment.patientName.charAt(0)}
+                          #{appointment.appointmentId}
                         </div>
                         <div>
                           <div className="text-sm font-medium text-gray-900">
-                            {appointment.patientName}
+                            Appointment #{appointment.appointmentId}
                           </div>
                           <div className="text-sm text-gray-500">
-                            ID: #{appointment.id}
+                            {appointment.serviceCategoryName}
                           </div>
                         </div>
                       </div>
@@ -362,10 +417,10 @@ const AdminAppointments = () => {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div>
                         <div className="text-sm font-medium text-gray-900">
-                          {formatDate(appointment.appointmentDate)}
+                          {formatDate(appointment.appointmentDateTime)}
                         </div>
                         <div className="text-sm text-gray-500">
-                          {formatTime(appointment.appointmentTime)}
+                          {formatTime(appointment.appointmentDateTime)}
                         </div>
                       </div>
                     </td>
@@ -383,13 +438,11 @@ const AdminAppointments = () => {
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <select
                         value={appointment.status}
-                        onChange={(e) => handleStatusUpdate(appointment.id, e.target.value)}
+                        onChange={(e) => handleStatusUpdate(appointment.appointmentId, e.target.value)}
                         className="px-3 py-1 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
                       >
-                        <option value="PENDING">Pending</option>
                         <option value="APPROVED">Approved</option>
                         <option value="CONFIRMED">Confirmed</option>
-                        <option value="REJECTED">Rejected</option>
                         <option value="COMPLETED">Completed</option>
                         <option value="CANCELLED">Cancelled</option>
                       </select>
@@ -409,17 +462,17 @@ const AdminAppointments = () => {
           <div className="flex flex-wrap gap-2">
             <button
               onClick={() => {
-                const pendingCount = appointments.filter(apt => apt.status === 'PENDING').length;
-                alert(`There are ${pendingCount} pending appointments that need attention.`);
+                const scheduledCount = Array.isArray(appointments) ? appointments.filter(apt => apt.status === 'SCHEDULED').length : 0;
+                alert(`There are ${scheduledCount} scheduled appointments that need attention.`);
               }}
               className="px-4 py-2 bg-yellow-100 text-yellow-800 rounded-lg hover:bg-yellow-200 transition-colors duration-200"
             >
-              View Pending ({statusCounts.PENDING})
+              View Scheduled ({statusCounts.SCHEDULED})
             </button>
             <button
               onClick={() => {
                 const today = new Date().toISOString().split('T')[0];
-                const todayAppointments = appointments.filter(apt => apt.appointmentDate === today);
+                const todayAppointments = Array.isArray(appointments) ? appointments.filter(apt => apt.appointmentDate === today) : [];
                 alert(`There are ${todayAppointments.length} appointments scheduled for today.`);
               }}
               className="px-4 py-2 bg-blue-100 text-blue-800 rounded-lg hover:bg-blue-200 transition-colors duration-200"

@@ -1,7 +1,9 @@
 package com.lankamed.health.backend.config;
 
 import com.lankamed.health.backend.model.*;
+import com.lankamed.health.backend.model.patient.Patient;
 import com.lankamed.health.backend.repository.*;
+import com.lankamed.health.backend.repository.patient.PatientRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -10,6 +12,7 @@ import org.springframework.stereotype.Component;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Component
 public class DataInitializer implements CommandLineRunner {
@@ -49,6 +52,7 @@ public class DataInitializer implements CommandLineRunner {
             
             if (!shouldInitializeData) {
                 System.out.println("DataInitializer: Data initialization is disabled, skipping...");
+                ensureCoreEntities();
                 return;
             }
             
@@ -66,14 +70,45 @@ public class DataInitializer implements CommandLineRunner {
             if (userCount == 0 && doctorCount == 0) {
                 System.out.println("DataInitializer: Database is empty, creating initial sample data...");
                 createSampleData();
+            } else if (doctorCount == 0) {
+                System.out.println("DataInitializer: No doctors found, creating sample doctors...");
+                createSampleDoctors();
             } else {
                 System.out.println("DataInitializer: Database already contains data, skipping initialization.");
                 System.out.println("DataInitializer: Existing users: " + userCount + ", doctors: " + doctorCount);
             }
+            // Always ensure core entities exist even if we skipped creating full sample data
+            ensureCoreEntities();
             
         } catch (Exception e) {
             System.err.println("DataInitializer: Error during initialization: " + e.getMessage());
             e.printStackTrace();
+        }
+    }
+
+    private void ensureCoreEntities() {
+        try {
+            if (hospitalRepository.count() == 0) {
+                System.out.println("DataInitializer: No hospitals found. Creating a default hospital...");
+                Hospital defaultHospital = Hospital.builder()
+                        .name("City General Hospital")
+                        .address("123 Main Street, Colombo 03")
+                        .contactNumber("+94-11-234-5678")
+                        .createdAt(Instant.now())
+                        .build();
+                hospitalRepository.save(defaultHospital);
+            }
+
+            if (serviceCategoryRepository.count() == 0) {
+                System.out.println("DataInitializer: No service categories found. Creating a default category...");
+                ServiceCategory defaultCategory = ServiceCategory.builder()
+                        .name("General Medicine")
+                        .description("General medical consultation")
+                        .build();
+                serviceCategoryRepository.save(defaultCategory);
+            }
+        } catch (Exception e) {
+            System.err.println("DataInitializer: Failed ensuring core entities: " + e.getMessage());
         }
     }
     
@@ -175,9 +210,43 @@ public class DataInitializer implements CommandLineRunner {
         }
     }
 
+    private void createSampleDoctors() {
+        try {
+            System.out.println("DataInitializer: Creating sample doctors...");
+            
+            // Get existing hospitals and categories
+            List<Hospital> hospitals = hospitalRepository.findAll();
+            List<ServiceCategory> categories = serviceCategoryRepository.findAll();
+            
+            if (hospitals.isEmpty() || categories.isEmpty()) {
+                System.out.println("DataInitializer: Cannot create doctors - missing hospitals or categories");
+                return;
+            }
+
+            // Create multiple doctors
+            createDoctor("Dr. Sarah", "Johnson", "sarah.johnson@lankamed.com", "Cardiologist", hospitals.get(0), categories.get(0));
+            createDoctor("Dr. Michael", "Chen", "michael.chen@lankamed.com", "Dermatologist", hospitals.get(0), categories.get(1));
+            createDoctor("Dr. Priya", "Fernando", "priya.fernando@lankamed.com", "Pediatrician", hospitals.get(1), categories.get(2));
+            createDoctor("Dr. David", "Rodrigo", "david.rodrigo@lankamed.com", "Neurologist", hospitals.get(1), categories.get(3));
+            createDoctor("Dr. James", "Wilson", "james.wilson@lankamed.com", "Orthopedic Surgeon", hospitals.get(2), categories.get(4));
+
+            System.out.println("DataInitializer: Created 5 sample doctors");
+        } catch (Exception e) {
+            System.err.println("DataInitializer: Error creating sample doctors: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
     private void createDoctor(String firstName, String lastName, String email, String specialization, Hospital hospital, ServiceCategory category) {
         try {
             System.out.println("DataInitializer: Creating doctor: " + firstName + " " + lastName);
+            
+            // Check if doctor already exists
+            Optional<User> existingUser = userRepository.findByEmail(email);
+            if (existingUser.isPresent()) {
+                System.out.println("DataInitializer: Doctor " + firstName + " " + lastName + " already exists, skipping...");
+                return;
+            }
             
             User doctor = User.builder()
                     .firstName(firstName)
@@ -254,21 +323,21 @@ public class DataInitializer implements CommandLineRunner {
             createAppointment(patients.get(1), doctors.get(1), hospitals.get(1), categories.get(1), 
                 now.minusDays(3).withHour(14).withMinute(30), Appointment.Status.COMPLETED);
 
-            // Upcoming appointments (confirmed)
+            // Upcoming appointments (pending/approved)
             createAppointment(patients.get(0), doctors.get(2), hospitals.get(2), categories.get(2), 
-                now.plusDays(2).withHour(9).withMinute(0), Appointment.Status.CONFIRMED);
+                now.plusDays(2).withHour(9).withMinute(0), Appointment.Status.APPROVED);
             createAppointment(patients.get(2), doctors.get(3), hospitals.get(0), categories.get(3), 
-                now.plusDays(3).withHour(11).withMinute(30), Appointment.Status.CONFIRMED);
+                now.plusDays(3).withHour(11).withMinute(30), Appointment.Status.PENDING);
 
-            // Pending appointments
+            // More upcoming
             createAppointment(patients.get(1), doctors.get(4), hospitals.get(1), categories.get(4), 
-                now.plusDays(1).withHour(15).withMinute(0), Appointment.Status.PENDING);
+                now.plusDays(1).withHour(15).withMinute(0), Appointment.Status.APPROVED);
             createAppointment(patients.get(3), doctors.get(5), hospitals.get(2), categories.get(0), 
                 now.plusDays(4).withHour(16).withMinute(30), Appointment.Status.PENDING);
 
-            // Approved appointments
+            // More upcoming
             createAppointment(patients.get(2), doctors.get(6), hospitals.get(0), categories.get(1), 
-                now.plusDays(5).withHour(10).withMinute(0), Appointment.Status.APPROVED);
+                now.plusDays(5).withHour(10).withMinute(0), Appointment.Status.PENDING);
             createAppointment(patients.get(3), doctors.get(7), hospitals.get(1), categories.get(2), 
                 now.plusDays(6).withHour(13).withMinute(0), Appointment.Status.APPROVED);
 

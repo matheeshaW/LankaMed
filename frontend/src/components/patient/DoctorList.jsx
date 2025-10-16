@@ -10,10 +10,37 @@ const DoctorList = ({ onBookAppointment }) => {
     date: ''
   });
   const [sortBy, setSortBy] = useState('rating');
+  const [availabilityMap, setAvailabilityMap] = useState({}); // doctorId -> {available, capacity}
 
   useEffect(() => {
     filterDoctors();
   }, [searchFilters, doctors, sortBy]);
+
+  useEffect(() => {
+    // Fetch today's availability for each doctor from backend
+    const today = new Date().toISOString().slice(0, 10);
+    async function loadAvailability() {
+      try {
+        const entries = await Promise.all(
+          doctors.map(async (d) => {
+            try {
+              const res = await fetch(`/api/slots/${d.id}?date=${today}`);
+              if (!res.ok) return [d.id, null];
+              const json = await res.json();
+              return [d.id, { available: json.available, capacity: json.capacity }];
+            } catch (e) {
+              return [d.id, null];
+            }
+          })
+        );
+        const map = Object.fromEntries(entries);
+        setAvailabilityMap(map);
+      } catch (e) {
+        // ignore; keep mock fallback
+      }
+    }
+    loadAvailability();
+  }, [doctors]);
 
   const filterDoctors = () => {
     let filtered = [...doctors];
@@ -256,7 +283,9 @@ const DoctorList = ({ onBookAppointment }) => {
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium text-blue-800">Available Slots</span>
                   <span className="text-sm font-bold text-blue-600">
-                    {getAvailableSlotsCount(doctor)} slots
+                    {availabilityMap[doctor.id]
+                      ? `${availabilityMap[doctor.id].available}/${availabilityMap[doctor.id].capacity} today`
+                      : `${getAvailableSlotsCount(doctor)} slots`}
                   </span>
                 </div>
               </div>

@@ -27,9 +27,11 @@ export const appointmentAPI = {
 	createAppointment: (appointmentData) => 
 		api.post('/api/patients/me/appointments', appointmentData),
 	getAllAppointments: () => 
-		api.get('/api/admin/appointments'),
+		api.get('/api/user-data/appointments'),
 	updateAppointmentStatus: (appointmentId, status) => 
-		api.put(`/api/admin/appointments/${appointmentId}/status`, { status }),
+		api.put(`/api/user-data/appointments/${appointmentId}/status`, { status }),
+	updateAppointment: (appointmentId, data) =>
+		api.put(`/api/user-data/appointments/${appointmentId}`, data),
 };
 
 // Review API endpoints
@@ -38,6 +40,30 @@ export const reviewAPI = {
 		api.post('/api/patients/me/reviews', reviewData),
 	getDoctorReviews: (doctorId) => 
 		api.get(`/api/patients/me/doctors/${doctorId}/reviews`),
+	getDoctorReviewStats: (doctorId) =>
+		api.get(`/api/patients/me/doctors/${doctorId}/review-stats`),
+};
+
+// Auth API endpoints
+export const authAPI = {
+	register: (userData) => 
+		api.post('/api/auth/register', userData),
+	login: (credentials) => 
+		api.post('/api/auth/login', credentials),
+};
+
+// Waitlist API endpoints
+export const waitlistAPI = {
+	getMyWaitlist: () => 
+		api.get('/api/patients/me/waitlist'),
+	addToWaitlist: (waitlistData) => 
+		api.post('/api/patients/me/waitlist', waitlistData),
+	getAllWaitlist: () => 
+		api.get('/api/admin/waitlist/all'),
+	updateWaitlistStatus: (waitlistId, status) => 
+		api.put(`/api/admin/waitlist/${waitlistId}/status`, { status }),
+	promoteToAppointment: (waitlistId) => 
+		api.post(`/api/admin/waitlist/${waitlistId}/promote`),
 };
 
 export default api;

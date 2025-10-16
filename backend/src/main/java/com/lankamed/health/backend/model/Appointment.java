@@ -2,6 +2,7 @@ package com.lankamed.health.backend.model;
 
 import com.lankamed.health.backend.model.patient.Patient;
 import jakarta.persistence.*;
+import com.lankamed.health.backend.model.converter.AppointmentStatusConverter;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -44,13 +45,17 @@ public class Appointment {
     @Column(name = "appointment_datetime", nullable = false)
     private LocalDateTime appointmentDateTime;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Convert(converter = AppointmentStatusConverter.class)
+    @Column(name = "status", nullable = false, columnDefinition = "varchar(20)")
     @Builder.Default
     private Status status = Status.PENDING;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
+
+    @Column(name = "priority", nullable = false)
+    @Builder.Default
+    private boolean priority = false;
 
     @PrePersist
     public void prePersist() {
@@ -60,6 +65,6 @@ public class Appointment {
     }
 
     public enum Status {
-        PENDING, APPROVED, CONFIRMED, REJECTED, COMPLETED, CANCELLED
+        PENDING, APPROVED, CONFIRMED, COMPLETED, CANCELLED
     }
 }

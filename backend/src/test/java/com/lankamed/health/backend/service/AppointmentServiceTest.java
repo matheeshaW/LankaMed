@@ -107,8 +107,6 @@ class AppointmentServiceTest {
     @Test
     void getPatientAppointments_Success() {
         // Given
-        when(patientRepository.findByUserEmail("john.doe@example.com"))
-                .thenReturn(Optional.of(testPatient));
         when(appointmentRepository.findByPatientUserEmailOrderByAppointmentDateTimeDesc("john.doe@example.com"))
                 .thenReturn(Arrays.asList(testAppointment));
 
@@ -134,8 +132,6 @@ class AppointmentServiceTest {
     @Test
     void getPatientAppointments_EmptyList() {
         // Given
-        when(patientRepository.findByUserEmail("john.doe@example.com"))
-                .thenReturn(Optional.of(testPatient));
         when(appointmentRepository.findByPatientUserEmailOrderByAppointmentDateTimeDesc("john.doe@example.com"))
                 .thenReturn(Arrays.asList());
 
@@ -173,8 +169,6 @@ class AppointmentServiceTest {
 
         List<Appointment> appointments = Arrays.asList(futureAppointment, testAppointment, pastAppointment);
 
-        when(patientRepository.findByUserEmail("john.doe@example.com"))
-                .thenReturn(Optional.of(testPatient));
         when(appointmentRepository.findByPatientUserEmailOrderByAppointmentDateTimeDesc("john.doe@example.com"))
                 .thenReturn(appointments);
 

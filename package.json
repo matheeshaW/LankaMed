@@ -1,0 +1,10 @@
+{
+  "name": "lankamed-root",
+  "private": true,
+  "scripts": {
+    "test": "cd backend && mvn -q -DskipITs -Dtest=*Appointment*Test,*AppointmentControllerTest,*UserDataControllerTest,*AdminControllerTest test",
+    "coverage": "cd backend && mvn -q -DskipITs -Dtest=*Appointment*Test,*AppointmentControllerTest,*UserDataControllerTest,*AdminControllerTest test jacoco:report && echo Coverage report: backend/target/site/jacoco/index.html"
+  }
+}
+
+

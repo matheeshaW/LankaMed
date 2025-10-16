@@ -22,4 +22,6 @@ public class CreateAppointmentDto {
     private LocalDateTime appointmentDateTime;
     
     private String reason;
+
+    private boolean priority;
 }

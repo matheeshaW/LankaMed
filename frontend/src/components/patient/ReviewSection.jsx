@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { addReview, getReviewsByDoctorId } from '../../data/mockData';
+import { reviewAPI } from '../../services/api';
 
 const ReviewSection = ({ appointment, onClose, onReviewSubmitted }) => {
   const [reviewData, setReviewData] = useState({
@@ -12,8 +12,17 @@ const ReviewSection = ({ appointment, onClose, onReviewSubmitted }) => {
 
   React.useEffect(() => {
     if (appointment) {
-      const reviews = getReviewsByDoctorId(appointment.doctorId);
-      setExistingReviews(reviews);
+      // Load existing reviews for this doctor from backend API
+      const loadReviews = async () => {
+        try {
+          const response = await reviewAPI.getDoctorReviews(appointment.doctorId);
+          setExistingReviews(response.data);
+        } catch (error) {
+          console.error('Error loading reviews:', error);
+          setExistingReviews([]);
+        }
+      };
+      loadReviews();
     }
   }, [appointment]);
 
@@ -59,23 +68,39 @@ const ReviewSection = ({ appointment, onClose, onReviewSubmitted }) => {
     setLoading(true);
     
     try {
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+      // Create review using backend API
       const reviewDataToSubmit = {
-        appointmentId: appointment.id,
-        doctorId: appointment.doctorId,
-        patientName: appointment.patientName,
+        appointmentId: appointment.appointmentId ?? appointment.id,
         rating: reviewData.rating,
         comment: reviewData.comment.trim()
       };
 
-      addReview(reviewDataToSubmit);
-      
-      onReviewSubmitted();
+      await reviewAPI.createReview(reviewDataToSubmit);
+
+      // Refresh doctor stats after submit
+      try {
+        const doctorId = appointment.doctorId || appointment.doctor?.staffId;
+        if (doctorId) {
+          const statsRes = await reviewAPI.getDoctorReviewStats(doctorId);
+          if (statsRes?.data) {
+            // bubble up so parent can merge stats into doctor cards
+            onReviewSubmitted && onReviewSubmitted(statsRes.data);
+          } else {
+            onReviewSubmitted && onReviewSubmitted();
+          }
+        } else {
+          onReviewSubmitted && onReviewSubmitted();
+        }
+      } catch (e) {
+        onReviewSubmitted && onReviewSubmitted();
+      }
     } catch (error) {
       console.error('Error submitting review:', error);
-      setErrors({ submit: 'Failed to submit review. Please try again.' });
+      if (error.response?.data?.message) {
+        setErrors({ submit: error.response.data.message });
+      } else {
+        setErrors({ submit: 'Failed to submit review. Please try again.' });
+      }
     } finally {
       setLoading(false);
     }

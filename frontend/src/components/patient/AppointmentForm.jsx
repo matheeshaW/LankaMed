@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { getAvailableSlots, bookAppointment } from '../../data/mockData';
+import { getAvailableSlots } from '../../data/mockData';
+import { appointmentAPI } from '../../services/api';
 import { getCurrentUser } from '../../utils/auth';
 
 const AppointmentForm = ({ doctor, onClose, onSuccess }) => {
@@ -9,15 +10,16 @@ const AppointmentForm = ({ doctor, onClose, onSuccess }) => {
   console.log('Current user in AppointmentForm:', currentUser);
   
   const [formData, setFormData] = useState({
-    patientName: currentUser?.name || '',
+    patientName: currentUser ? `${currentUser.firstName || currentUser.name || ''} ${currentUser.lastName || ''}`.trim() : '',
     patientEmail: currentUser?.email || '',
-    patientPhone: currentUser?.phone || '',
+    patientPhone: currentUser?.phone || currentUser?.contactNumber || '',
     appointmentDate: '',
     appointmentTime: '',
     reason: '',
     notes: ''
   });
   const [availableSlots, setAvailableSlots] = useState([]);
+  const [isPriority, setIsPriority] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
 
@@ -89,29 +91,28 @@ const AppointmentForm = ({ doctor, onClose, onSuccess }) => {
     setLoading(true);
     
     try {
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+      // Prepare appointment data for backend API
       const appointmentData = {
-        patientId: currentUser?.id || 1,
-        patientName: formData.patientName,
         doctorId: doctor.id,
-        doctorName: doctor.name,
-        doctorSpecialization: doctor.specialization,
-        hospitalName: doctor.hospital,
-        appointmentDate: formData.appointmentDate,
-        appointmentTime: formData.appointmentTime,
+        hospitalId: 1, // Default hospital ID - you may need to get this from doctor data
+        serviceCategoryId: 1, // Default service category ID - you may need to get this from doctor data
+        appointmentDateTime: `${formData.appointmentDate}T${formData.appointmentTime}:00`,
         reason: formData.reason,
-        notes: formData.notes
+        notes: formData.notes,
+        priority: isPriority
       };
 
-      const newAppointment = bookAppointment(appointmentData);
+      console.log('Submitting appointment data:', appointmentData);
       
-      onSuccess(`Appointment booked successfully! Your appointment ID is #${newAppointment.id}. You will receive a confirmation email shortly.`);
+      // Call the real backend API
+      const response = await appointmentAPI.createAppointment(appointmentData);
+      
+      onSuccess(`Appointment booked successfully! Your appointment ID is #${response.data.appointmentId}. You will receive a confirmation email shortly.`);
       onClose();
     } catch (error) {
       console.error('Error booking appointment:', error);
-      setErrors({ submit: 'Failed to book appointment. Please try again.' });
+      const message = error?.response?.data?.message || error?.response?.data?.error || error?.message || 'Failed to book appointment. Please try again.';
+      setErrors({ submit: message });
     } finally {
       setLoading(false);
     }
@@ -237,6 +238,13 @@ const AppointmentForm = ({ doctor, onClose, onSuccess }) => {
 
           {/* Appointment Details */}
           <div className="space-y-4">
+            <div>
+              <label className="inline-flex items-center space-x-2">
+                <input type="checkbox" checked={isPriority} onChange={(e)=>setIsPriority(e.target.checked)} />
+                <span className="text-sm text-gray-700">Request priority appointment</span>
+              </label>
+              <p className="text-xs text-gray-500 mt-1">Priority requests are reviewed by admin.</p>
+            </div>
             <h4 className="text-lg font-semibold text-gray-800 border-b border-gray-200 pb-2">
               Appointment Details
             </h4>
