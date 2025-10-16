@@ -60,15 +60,33 @@ const PatientDashboard = () => {
             const appointmentsData = appointmentsResponse.data;
 
             if (Array.isArray(appointmentsData)) {
-              // Filter for confirmed appointments and add actual payment amounts based on doctor fees
+              console.log(
+                "PatientDashboard: Received appointments data:",
+                appointmentsData
+              );
+
+              // Filter for confirmed appointments and use actual payment amounts
               const confirmedAppointments = appointmentsData
                 .filter((apt) => apt.status === "CONFIRMED")
-                .map((apt) => ({
-                  ...apt,
-                  amount: apt.paymentAmount || 1500, // Use actual appointment payment amount, fallback to 1500
-                  paymentMethod: "Medical Service",
-                  paymentTimestamp: new Date().toISOString(),
-                }));
+                .map((apt) => {
+                  console.log("PatientDashboard: Processing appointment:", {
+                    appointmentId: apt.appointmentId,
+                    paymentAmount: apt.paymentAmount,
+                    doctorFee: apt.doctorFee,
+                    status: apt.status,
+                  });
+
+                  return {
+                    ...apt,
+                    amount: apt.paymentAmount || apt.doctorFee || 1500, // Use actual payment amount, doctor's fee, or fallback
+                    paymentMethod: "Medical Service",
+                    paymentTimestamp: new Date().toISOString(),
+                  };
+                });
+              console.log(
+                "PatientDashboard: Confirmed appointments for billing:",
+                confirmedAppointments
+              );
               setPendingBills(confirmedAppointments);
             } else if (
               appointmentsData &&
@@ -80,7 +98,7 @@ const PatientDashboard = () => {
                 .filter((apt) => apt.status === "CONFIRMED")
                 .map((apt) => ({
                   ...apt,
-                  amount: apt.doctorFee || 1500, // Use doctor's fee as payment amount, fallback to 1500
+                  amount: apt.paymentAmount || apt.doctorFee || 1500, // Use actual payment amount, doctor's fee, or fallback
                   paymentMethod: "Medical Service",
                   paymentTimestamp: new Date().toISOString(),
                 }));

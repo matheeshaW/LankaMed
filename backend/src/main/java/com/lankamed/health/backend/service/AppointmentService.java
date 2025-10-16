@@ -192,15 +192,27 @@ public class AppointmentService {
             payment.setPatient(appointment.getPatient());
             payment.setAppointment(appointment);
 
-            // Set a default amount - in a real system this would come from service pricing
-            payment.setAmount(1500.00); // Default consultation fee
+            // Use doctor's consultation fee or fallback to default
+            Double consultationFee = appointment.getDoctor().getConsultationFee();
+            if (consultationFee == null || consultationFee <= 0) {
+                consultationFee = 1500.00; // Default consultation fee
+                logger.warn("Doctor consultation fee not set for doctor ID: {}, using default: {}",
+                           appointment.getDoctor().getStaffId(), consultationFee);
+            }
+
+            payment.setAmount(consultationFee);
             payment.setPaymentType(PaymentType.Card); // Default payment type
             payment.setStatus(PaymentStatus.Pending);
             payment.setTransactionId("APPT-" + appointment.getAppointmentId() + "-" + UUID.randomUUID().toString().substring(0, 8));
             payment.setPaymentTimestamp(LocalDateTime.now());
 
+            // Also update the appointment's payment amount for consistency
+            appointment.setPaymentAmount(consultationFee);
+            appointmentRepository.save(appointment);
+
             paymentRepository.save(payment);
-            logger.info("Successfully created pending payment for appointment ID: {}", appointment.getAppointmentId());
+            logger.info("Successfully created pending payment for appointment ID: {} with amount: {}",
+                       appointment.getAppointmentId(), consultationFee);
 
         } catch (Exception e) {
             logger.error("Error creating pending payment for confirmed appointment ID: " + appointment.getAppointmentId(), e);
@@ -275,6 +287,16 @@ public class AppointmentService {
     static class DefaultAppointmentFactory implements AppointmentFactory {
         @Override
         public Appointment create(CreateAppointmentDto dto, Patient patient, StaffDetails doctor, Hospital hospital, ServiceCategory serviceCategory) {
+            // Calculate payment amount based on doctor's consultation fee
+            Double paymentAmount = doctor.getConsultationFee();
+            if (paymentAmount == null || paymentAmount <= 0) {
+                paymentAmount = 1500.00; // Default consultation fee
+            }
+
+            System.out.println("AppointmentFactory: Creating appointment with payment amount: " + paymentAmount);
+            System.out.println("AppointmentFactory: Doctor consultation fee: " + doctor.getConsultationFee());
+            System.out.println("AppointmentFactory: Doctor ID: " + doctor.getStaffId());
+
             return Appointment.builder()
                     .patient(patient)
                     .doctor(doctor)
@@ -283,6 +305,7 @@ public class AppointmentService {
                     .appointmentDateTime(dto.getAppointmentDateTime())
                     .status(dto.isPriority() ? Appointment.Status.CONFIRMED : Appointment.Status.PENDING)
                     .priority(dto.isPriority())
+                    .paymentAmount(paymentAmount)
                     .build();
         }
     }
