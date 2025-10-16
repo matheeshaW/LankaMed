@@ -39,10 +39,11 @@ public class HtmlReportGenerator implements IReportGenerator {
                 .append("    .criteria-grid td { padding: 6px 10px; border: 1px solid #E5E7EB; font-size: 11px; }\n")
                 .append("    .criteria-label { background-color: #F3F4F6; font-weight: bold; width: 35%; color: #374151; }\n")
                 .append("    .criteria-value { background-color: #FFFFFF; color: #1F2937; }\n")
-                .append("    .kpi-table { width: 100%; border-collapse: separate; border-spacing: 8px 6px; margin: 8px 0; }\n")
-                .append("    .kpi-table td { width: 48%; padding: 20px 15px; background-color: #667EEA; color: #FFFFFF; border: 3px solid #4F46E5; text-align: center; vertical-align: middle; }\n")
-                .append("    .kpi-label { font-size: 11px; font-weight: bold; margin-bottom: 8px; display: block; text-transform: uppercase; letter-spacing: 1px; }\n")
-                .append("    .kpi-value { font-size: 32px; font-weight: bold; display: block; margin-top: 5px; line-height: 1; }\n")
+                .append("    .kpi-table { width: 100%; border-collapse: separate; border-spacing: 10px; margin: 8px 0; }\n")
+                .append("    .kpi-table td { width: 48%; padding: 0; text-align: center; vertical-align: middle; }\n")
+                .append("    .kpi-card { padding: 20px 15px; background: linear-gradient(135deg, #667EEA 0%, #764BA2 100%); border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); }\n")
+                .append("    .kpi-label { font-size: 11px; font-weight: 600; margin-bottom: 10px; display: block; text-transform: uppercase; letter-spacing: 1.5px; color: rgba(255, 255, 255, 0.9); }\n")
+                .append("    .kpi-value { font-size: 36px; font-weight: 700; display: block; color: #FFFFFF; line-height: 1; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); }\n")
                 .append("    .footer { margin-top: 15px; padding-top: 10px; border-top: 1px solid #E5E7EB; text-align: center; color: #6B7280; font-size: 10px; }\n")
                 .append("  </style>\n")
                 .append("</head>\n")
@@ -96,8 +97,10 @@ public class HtmlReportGenerator implements IReportGenerator {
                 String label = formatLabel(entry.getKey());
                 String value = String.valueOf(entry.getValue());
                 html.append("        <td>\n")
-                    .append("          <span class=\"kpi-label\">").append(label).append("</span>\n")
-                    .append("          <span class=\"kpi-value\">").append(value).append("</span>\n")
+                    .append("          <div class=\"kpi-card\">\n")
+                    .append("            <span class=\"kpi-label\">").append(label).append("</span>\n")
+                    .append("            <span class=\"kpi-value\">").append(value).append("</span>\n")
+                    .append("          </div>\n")
                     .append("        </td>\n");
                 
                 count++;
