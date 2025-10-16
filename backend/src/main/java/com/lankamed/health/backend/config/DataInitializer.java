@@ -199,6 +199,9 @@ public class DataInitializer implements CommandLineRunner {
             User patient3 = createPatient("Robert", "Brown", "robert.brown@example.com", "patient123");
             User patient4 = createPatient("Emily", "Davis", "emily.davis@example.com", "patient123");
 
+            // Create test user for development
+            User testUser = createPatient("Test", "User", "test@example.com", "test123");
+
             // Create sample appointments
             createSampleAppointments();
 

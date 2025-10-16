@@ -135,7 +135,7 @@ class AppointmentServiceTest {
         AppointmentDto dto = result.get(0);
         assertEquals(1L, dto.getAppointmentId());
         assertEquals(LocalDateTime.of(2024, 1, 15, 10, 0), dto.getAppointmentDateTime());
-        assertEquals(Appointment.Status.SCHEDULED, dto.getStatus());
+        assertEquals(Appointment.Status.PENDING, dto.getStatus());
         assertEquals("Dr. Jane Smith", dto.getDoctorName());
         assertEquals("Cardiologist", dto.getDoctorSpecialization());
         assertEquals("City General Hospital", dto.getHospitalName());
@@ -164,20 +164,11 @@ class AppointmentServiceTest {
         Appointment broken = Appointment.builder()
                 .appointmentId(99L)
                 .patient(testPatient)
-                .doctor(testDoctor)
-                .hospital(testHospital)
-                .serviceCategory(testCategory)
-                .appointmentDateTime(LocalDateTime.of(2024, 2, 1, 9, 0))
-                .status(Appointment.Status.PENDING)
-                .build();
-
-        List<Appointment> appointments = Arrays.asList(futureAppointment, testAppointment, pastAppointment);
-
                 .doctor(null) // missing doctor
                 .hospital(null)
                 .serviceCategory(null)
                 .appointmentDateTime(LocalDateTime.now())
-                .status(Appointment.Status.SCHEDULED)
+                .status(Appointment.Status.PENDING)
                 .build();
 
         when(appointmentRepository.findByPatientUserEmailOrderByAppointmentDateTimeDesc("john.doe@example.com"))

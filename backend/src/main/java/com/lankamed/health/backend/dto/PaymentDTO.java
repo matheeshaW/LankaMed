@@ -4,17 +4,24 @@ public class PaymentDTO {
     private Long patientId;
     private Long appointmentId;
     private double amount;
-    private String paymentMethod; 
-    private String cardNumber; 
+    private String paymentMethod;
+    private String cardNumber;
     private String insuranceNumber;
     private String transactionId;
     private String status;
+
+    // Appointment details
+    private String appointmentDateTime;
+    private String doctorName;
+    private String serviceName;
+    private String hospitalName;
+    private String appointmentDescription;
 
     // Constructors
     public PaymentDTO() {
     }
 
-    public PaymentDTO(Long patientId, Long appointmentId, double amount, String paymentMethod, 
+    public PaymentDTO(Long patientId, Long appointmentId, double amount, String paymentMethod,
                       String transactionId, String status) {
         this.patientId = patientId;
         this.appointmentId = appointmentId;
@@ -22,6 +29,23 @@ public class PaymentDTO {
         this.paymentMethod = paymentMethod;
         this.transactionId = transactionId;
         this.status = status;
+    }
+
+    public PaymentDTO(Long patientId, Long appointmentId, double amount, String paymentMethod,
+                      String transactionId, String status, String appointmentDateTime,
+                      String doctorName, String serviceName, String hospitalName,
+                      String appointmentDescription) {
+        this.patientId = patientId;
+        this.appointmentId = appointmentId;
+        this.amount = amount;
+        this.paymentMethod = paymentMethod;
+        this.transactionId = transactionId;
+        this.status = status;
+        this.appointmentDateTime = appointmentDateTime;
+        this.doctorName = doctorName;
+        this.serviceName = serviceName;
+        this.hospitalName = hospitalName;
+        this.appointmentDescription = appointmentDescription;
     }
 
     // Getters and Setters
@@ -87,5 +111,46 @@ public class PaymentDTO {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    // Appointment detail getters and setters
+    public String getAppointmentDateTime() {
+        return appointmentDateTime;
+    }
+
+    public void setAppointmentDateTime(String appointmentDateTime) {
+        this.appointmentDateTime = appointmentDateTime;
+    }
+
+    public String getDoctorName() {
+        return doctorName;
+    }
+
+    public void setDoctorName(String doctorName) {
+        this.doctorName = doctorName;
+    }
+
+    public String getServiceName() {
+        return serviceName;
+    }
+
+    public void setServiceName(String serviceName) {
+        this.serviceName = serviceName;
+    }
+
+    public String getHospitalName() {
+        return hospitalName;
+    }
+
+    public void setHospitalName(String hospitalName) {
+        this.hospitalName = hospitalName;
+    }
+
+    public String getAppointmentDescription() {
+        return appointmentDescription;
+    }
+
+    public void setAppointmentDescription(String appointmentDescription) {
+        this.appointmentDescription = appointmentDescription;
     }
 }

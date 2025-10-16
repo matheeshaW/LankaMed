@@ -6,6 +6,7 @@ import ProfilePage from "./pages/ProfilePage";
 import AdminDashboard from "./pages/AdminDashboard";
 import PatientDashboard from "./pages/PatientDashboard";
 import AppointmentsPage from "./pages/AppointmentsPage";
+import PaymentFlow from "./pages/PaymentFlow";
 import Navbar from "./components/Navbar";
 import { getRole, isLoggedIn } from "./utils/auth";
 
@@ -44,6 +45,7 @@ function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/appointments" element={<AppointmentsPage />} />
+          <Route path="/patient/payment" element={<PaymentFlow />} />
           <Route path="/patient/*" element={<PatientDashboard />} />
           <Route path="/admin/*" element={<AdminDashboard />} />
         </Routes>

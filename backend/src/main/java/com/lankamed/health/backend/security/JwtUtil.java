@@ -22,7 +22,15 @@ public class JwtUtil {
     private long jwtExpirationMs;
 
     public String extractUsername(String token) {
-        return extractClaim(token, Claims::getSubject);
+        try {
+            String username = extractClaim(token, Claims::getSubject);
+            System.out.println("JwtUtil: Successfully extracted username: " + username);
+            return username;
+        } catch (Exception e) {
+            System.err.println("JwtUtil: Failed to extract username from token: " + e.getMessage());
+            e.printStackTrace();
+            throw new RuntimeException("Invalid JWT token: " + e.getMessage());
+        }
     }
 
     public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {

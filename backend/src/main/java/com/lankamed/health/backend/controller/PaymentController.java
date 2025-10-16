@@ -23,7 +23,13 @@ public class PaymentController {
 
     @GetMapping("/pending/{patientId}")
     public List<PaymentDTO> getPendingPayments(@PathVariable Long patientId) {
-        return paymentService.getPendingPayments(patientId);
+        try {
+            return paymentService.getPendingPayments(patientId);
+        } catch (IllegalArgumentException e) {
+            throw new RuntimeException("Patient not found: " + e.getMessage());
+        } catch (Exception e) {
+            throw new RuntimeException("Error fetching pending payments: " + e.getMessage());
+        }
     }
 
     @PostMapping("/make")
@@ -31,4 +37,3 @@ public class PaymentController {
         return paymentService.makePayment(paymentDTO);
     }
 }
-

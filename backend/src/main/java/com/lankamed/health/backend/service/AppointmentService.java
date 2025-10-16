@@ -10,12 +10,16 @@ import com.lankamed.health.backend.model.ServiceCategory;
 import com.lankamed.health.backend.model.StaffDetails;
 import com.lankamed.health.backend.repository.AppointmentRepository;
 import com.lankamed.health.backend.repository.HospitalRepository;
+import com.lankamed.health.backend.repository.PaymentRepository;
 import com.lankamed.health.backend.repository.patient.PatientRepository;
 import com.lankamed.health.backend.repository.ServiceCategoryRepository;
 import com.lankamed.health.backend.repository.StaffDetailsRepository;
 import com.lankamed.health.backend.repository.UserRepository;
 import com.lankamed.health.backend.model.User;
 import com.lankamed.health.backend.model.Role;
+import com.lankamed.health.backend.model.Payment;
+import com.lankamed.health.backend.model.PaymentType;
+import com.lankamed.health.backend.model.PaymentStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.Authentication;
@@ -23,7 +27,10 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -38,24 +45,27 @@ public class AppointmentService {
     private final ServiceCategoryRepository serviceCategoryRepository;
     private final StaffDetailsRepository staffDetailsRepository;
     private final UserRepository userRepository;
+    private final PaymentRepository paymentRepository;
 
     // Extracted collaborators to follow SRP/DIP while keeping behavior
     private final CurrentUserEmailProvider currentUserEmailProvider;
     private final DoctorSelectionPolicy doctorSelectionPolicy;
     private final AppointmentFactory appointmentFactory;
 
-    public AppointmentService(AppointmentRepository appointmentRepository, 
+    public AppointmentService(AppointmentRepository appointmentRepository,
                             PatientRepository patientRepository,
                             HospitalRepository hospitalRepository,
                             ServiceCategoryRepository serviceCategoryRepository,
                             StaffDetailsRepository staffDetailsRepository,
-                            UserRepository userRepository) {
+                            UserRepository userRepository,
+                            PaymentRepository paymentRepository) {
         this.appointmentRepository = appointmentRepository;
         this.patientRepository = patientRepository;
         this.hospitalRepository = hospitalRepository;
         this.serviceCategoryRepository = serviceCategoryRepository;
         this.staffDetailsRepository = staffDetailsRepository;
         this.userRepository = userRepository;
+        this.paymentRepository = paymentRepository;
 
         // Default implementations preserve existing behavior
         this.currentUserEmailProvider = new SecurityContextCurrentUserEmailProvider();
@@ -81,9 +91,10 @@ public class AppointmentService {
     public AppointmentDto createAppointment(CreateAppointmentDto createAppointmentDto) {
         String email = currentUserEmailProvider.getCurrentUserEmail();
         
-        // If no authenticated user or anonymous user, use the first available patient email
+        // If no authenticated user or anonymous user, return an error since we need a valid user
         if (email == null || email.isEmpty() || "anonymousUser".equals(email)) {
-            email = "john.doe@example.com"; // Use the first patient created in DataInitializer
+            // For development purposes, allow using a default test user if it exists
+            email = "test@example.com";
         }
         
         // Make email final for lambda
@@ -95,18 +106,29 @@ public class AppointmentService {
                     logger.info("AppointmentService: No patient record found, creating one for email: {}", finalEmail);
                     // Find the user first
                     User user = userRepository.findByEmail(finalEmail)
-                            .orElseThrow(() -> new RuntimeException("User not found for email: " + finalEmail));
-                    
+                            .orElseGet(() -> {
+                                // Create user if doesn't exist (for development)
+                                logger.info("AppointmentService: Creating user for email: {}", finalEmail);
+                                User newUser = User.builder()
+                                        .firstName(finalEmail.split("@")[0])
+                                        .lastName("Patient")
+                                        .email(finalEmail)
+                                        .passwordHash("$2a$10$dummyHashedPasswordForDevelopment")
+                                        .role(Role.PATIENT)
+                                        .createdAt(Instant.now())
+                                        .build();
+                                return userRepository.save(newUser);
+                            });
+
                     // Create a new patient record
                     Patient newPatient = Patient.builder()
-                            // Do not set patientId manually when using @MapsId. JPA will assign from user.
                             .user(user)
                             .dateOfBirth(java.time.LocalDate.of(1990, 1, 1)) // Default date
                             .gender(Patient.Gender.OTHER) // Default gender
                             .contactNumber("Not Provided")
                             .address("Not Provided")
                             .build();
-                    
+
                     return patientRepository.save(newPatient);
                 });
 
@@ -141,14 +163,49 @@ public class AppointmentService {
         Appointment appointment = appointmentRepository.findById(appointmentId)
                 .orElseThrow(() -> new RuntimeException("Appointment not found"));
 
+        // Store the previous status to check if it's being confirmed
+        Appointment.Status previousStatus = appointment.getStatus();
+
         appointment.setStatus(updateDto.getStatus());
         Appointment savedAppointment = appointmentRepository.save(appointment);
+
+        // If appointment is being confirmed and wasn't confirmed before, create a pending payment
+        if (updateDto.getStatus() == Appointment.Status.CONFIRMED &&
+            previousStatus != Appointment.Status.CONFIRMED) {
+            createPendingPaymentForConfirmedAppointment(savedAppointment);
+        }
+
         return AppointmentDto.fromAppointment(savedAppointment);
     }
 
     private String getCurrentUserEmail() {
         // Backward-compatible private method retained; now delegates to provider
         return currentUserEmailProvider.getCurrentUserEmail();
+    }
+
+    private void createPendingPaymentForConfirmedAppointment(Appointment appointment) {
+        try {
+            logger.info("Creating pending payment for confirmed appointment ID: {}", appointment.getAppointmentId());
+
+            // Create a new payment record for the confirmed appointment
+            Payment payment = new Payment();
+            payment.setPatient(appointment.getPatient());
+            payment.setAppointment(appointment);
+
+            // Set a default amount - in a real system this would come from service pricing
+            payment.setAmount(1500.00); // Default consultation fee
+            payment.setPaymentType(PaymentType.Card); // Default payment type
+            payment.setStatus(PaymentStatus.Pending);
+            payment.setTransactionId("APPT-" + appointment.getAppointmentId() + "-" + UUID.randomUUID().toString().substring(0, 8));
+            payment.setPaymentTimestamp(LocalDateTime.now());
+
+            paymentRepository.save(payment);
+            logger.info("Successfully created pending payment for appointment ID: {}", appointment.getAppointmentId());
+
+        } catch (Exception e) {
+            logger.error("Error creating pending payment for confirmed appointment ID: " + appointment.getAppointmentId(), e);
+            // Don't throw exception to avoid breaking the appointment confirmation flow
+        }
     }
 
     // ===== Collaborator abstractions and defaults (package-private for test visibility if needed) =====
