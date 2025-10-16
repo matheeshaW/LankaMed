@@ -4,23 +4,27 @@ import java.util.Map;
 
 import org.springframework.stereotype.Service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lankamed.health.backend.service.interfaces.IReportGenerator;
 
 @Service
 public class HtmlReportGenerator implements IReportGenerator {
-    private final ObjectMapper objectMapper = new ObjectMapper();
     @Override
     public String generate(Map<String, Object> data, Map<String, Object> meta) {
         try {
+            System.out.println("=== HtmlReportGenerator: Starting report generation ===");
+            System.out.println("Data keys: " + data.keySet());
+            System.out.println("Meta keys: " + meta.keySet());
+            
             // Extract criteria for display
             @SuppressWarnings("unchecked")
             Map<String, Object> metaCriteria = meta.get("criteria") instanceof Map 
                 ? (Map<String, Object>) meta.get("criteria") 
                 : Map.of();
             
+            System.out.println("Criteria keys: " + metaCriteria.keySet());
+            System.out.println("Criteria values: " + metaCriteria);
+            
             String reportTitle = (String) meta.getOrDefault("title", "Statistical Report");
-            String chartPayload = objectMapper.writeValueAsString(data);
             
             // Build professional HTML report
             StringBuilder html = new StringBuilder();
@@ -31,22 +35,22 @@ public class HtmlReportGenerator implements IReportGenerator {
                 .append("  <meta charset=\"UTF-8\"/>\n")
                 .append("  <title>").append(reportTitle).append("</title>\n")
                 .append("  <style>\n")
-                .append("    body { font-family: Arial, Helvetica, sans-serif; margin: 30px; color: #333; }\n")
-                .append("    .header { text-align: center; border-bottom: 3px solid #4F46E5; padding-bottom: 20px; margin-bottom: 30px; }\n")
-                .append("    .header h1 { color: #4F46E5; font-size: 28px; margin: 10px 0; }\n")
-                .append("    .header p { color: #666; font-size: 14px; margin: 5px 0; }\n")
-                .append("    .section { margin-bottom: 25px; page-break-inside: avoid; }\n")
-                .append("    .section h2 { color: #1F2937; font-size: 20px; border-bottom: 2px solid #E5E7EB; padding-bottom: 8px; margin-bottom: 15px; }\n")
-                .append("    .criteria-grid { width: 100%; border-collapse: collapse; border: 1px solid #E5E7EB; margin-bottom: 20px; }\n")
-                .append("    .criteria-grid td { padding: 10px; border: 1px solid #E5E7EB; }\n")
-                .append("    .criteria-label { background-color: #F9FAFB; font-weight: bold; width: 30%; }\n")
-                .append("    .criteria-value { background-color: white; }\n")
-                .append("    .kpi-table { width: 100%; border-collapse: collapse; }\n")
-                .append("    .kpi-table td { width: 48%; padding: 20px; margin: 5px; background-color: #667EEA; color: white; border: 2px solid #4F46E5; text-align: center; vertical-align: top; }\n")
-                .append("    .kpi-label { font-size: 16px; font-weight: bold; margin-bottom: 10px; display: block; }\n")
-                .append("    .kpi-value { font-size: 36px; font-weight: bold; display: block; margin-top: 10px; }\n")
-                .append("    .footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #E5E7EB; text-align: center; color: #6B7280; font-size: 12px; }\n")
-                .append("    pre#chartData { display: none; }\n")
+                .append("    @page { size: A4; margin: 15mm; }\n")
+                .append("    body { font-family: Arial, Helvetica, sans-serif; margin: 0; padding: 15px; color: #333; font-size: 11px; }\n")
+                .append("    .header { text-align: center; border-bottom: 3px solid #4F46E5; padding-bottom: 12px; margin-bottom: 15px; }\n")
+                .append("    .header h1 { color: #4F46E5; font-size: 22px; margin: 5px 0; }\n")
+                .append("    .header p { color: #666; font-size: 11px; margin: 3px 0; }\n")
+                .append("    .section { margin-bottom: 15px; page-break-inside: avoid; }\n")
+                .append("    .section h2 { color: #1F2937; font-size: 16px; border-bottom: 2px solid #E5E7EB; padding-bottom: 5px; margin: 8px 0 10px 0; }\n")
+                .append("    .criteria-grid { width: 100%; border-collapse: collapse; border: 2px solid #4F46E5; margin-bottom: 12px; }\n")
+                .append("    .criteria-grid td { padding: 6px 10px; border: 1px solid #E5E7EB; font-size: 11px; }\n")
+                .append("    .criteria-label { background-color: #F3F4F6; font-weight: bold; width: 35%; color: #374151; }\n")
+                .append("    .criteria-value { background-color: #FFFFFF; color: #1F2937; }\n")
+                .append("    .kpi-table { width: 100%; border-collapse: separate; border-spacing: 8px 6px; margin: 8px 0; }\n")
+                .append("    .kpi-table td { width: 48%; padding: 20px 15px; background-color: #667EEA; color: #FFFFFF; border: 3px solid #4F46E5; text-align: center; vertical-align: middle; }\n")
+                .append("    .kpi-label { font-size: 11px; font-weight: bold; margin-bottom: 8px; display: block; text-transform: uppercase; letter-spacing: 1px; }\n")
+                .append("    .kpi-value { font-size: 32px; font-weight: bold; display: block; margin-top: 5px; line-height: 1; }\n")
+                .append("    .footer { margin-top: 15px; padding-top: 10px; border-top: 1px solid #E5E7EB; text-align: center; color: #6B7280; font-size: 10px; }\n")
                 .append("  </style>\n")
                 .append("</head>\n")
                 .append("<body>\n");
@@ -62,19 +66,29 @@ public class HtmlReportGenerator implements IReportGenerator {
                 .append("    <h2>Report Criteria</h2>\n")
                 .append("    <table class=\"criteria-grid\">\n");
             
-            appendCriteriaRowTable(html, "Date Range", 
-                metaCriteria.getOrDefault("from", "N/A") + " to " + metaCriteria.getOrDefault("to", "N/A"));
-            appendCriteriaRowTable(html, "Hospital ID", metaCriteria.getOrDefault("hospitalId", "All"));
-            appendCriteriaRowTable(html, "Service Category", metaCriteria.getOrDefault("serviceCategory", "All"));
-            appendCriteriaRowTable(html, "Patient Category", metaCriteria.getOrDefault("patientCategory", "All"));
-            appendCriteriaRowTable(html, "Gender", metaCriteria.getOrDefault("gender", "All"));
+            System.out.println("Building criteria table...");
+            
+            String fromDate = metaCriteria.get("from") != null ? String.valueOf(metaCriteria.get("from")) : "N/A";
+            String toDate = metaCriteria.get("to") != null ? String.valueOf(metaCriteria.get("to")) : "N/A";
+            appendCriteriaRowTable(html, "Date Range", fromDate + " to " + toDate);
+            
+            appendCriteriaRowTable(html, "Hospital ID", 
+                metaCriteria.get("hospitalId") != null ? String.valueOf(metaCriteria.get("hospitalId")) : "All");
+            appendCriteriaRowTable(html, "Service Category", 
+                metaCriteria.get("serviceCategory") != null ? String.valueOf(metaCriteria.get("serviceCategory")) : "All");
+            appendCriteriaRowTable(html, "Patient Category", 
+                metaCriteria.get("patientCategory") != null ? String.valueOf(metaCriteria.get("patientCategory")) : "All");
+            appendCriteriaRowTable(html, "Gender", 
+                metaCriteria.get("gender") != null ? String.valueOf(metaCriteria.get("gender")) : "All");
             
             Object minAge = metaCriteria.get("minAge");
             Object maxAge = metaCriteria.get("maxAge");
             String ageRange = (minAge != null || maxAge != null) 
-                ? (minAge != null ? minAge : "0") + " - " + (maxAge != null ? maxAge : "∞")
+                ? (minAge != null ? String.valueOf(minAge) : "0") + " - " + (maxAge != null ? String.valueOf(maxAge) : "∞")
                 : "All";
             appendCriteriaRowTable(html, "Age Range", ageRange);
+            
+            System.out.println("Criteria table built successfully");
             
             html.append("    </table>\n")
                 .append("  </div>\n");
@@ -111,9 +125,6 @@ public class HtmlReportGenerator implements IReportGenerator {
             html.append("    </table>\n")
                 .append("  </div>\n");
             
-            // Hidden chart data for frontend rendering
-            html.append("  <pre id=\"chartData\">").append(chartPayload).append("</pre>\n");
-            
             // Footer
             html.append("  <div class=\"footer\">\n")
                 .append("    <p>LankaMed Healthcare System | Confidential Report</p>\n")
@@ -121,7 +132,11 @@ public class HtmlReportGenerator implements IReportGenerator {
             
             html.append("</body>\n</html>");
             
-            return html.toString();
+            String result = html.toString();
+            System.out.println("=== HtmlReportGenerator: Report generated successfully ===");
+            System.out.println("HTML length: " + result.length());
+            
+            return result;
             
         } catch (Exception e) {
             throw new RuntimeException("Failed to generate HTML report: " + e.getMessage(), e);
@@ -132,10 +147,29 @@ public class HtmlReportGenerator implements IReportGenerator {
      * Helper method to append a criteria row to HTML table
      */
     private void appendCriteriaRowTable(StringBuilder html, String label, Object value) {
+        String safeLabel = escapeHtml(label);
+        String safeValue = escapeHtml(value != null ? String.valueOf(value) : "N/A");
+        
+        System.out.println("  Adding criteria row: " + label + " = " + safeValue);
+        
         html.append("      <tr class=\"criteria-row\">\n")
-            .append("        <td class=\"criteria-label\">").append(label).append(":</td>\n")
-            .append("        <td class=\"criteria-value\">").append(value != null ? value : "N/A").append("</td>\n")
+            .append("        <td class=\"criteria-label\">").append(safeLabel).append(":</td>\n")
+            .append("        <td class=\"criteria-value\">").append(safeValue).append("</td>\n")
             .append("      </tr>\n");
+    }
+    
+    /**
+     * Escapes HTML special characters to ensure XHTML compliance
+     */
+    private String escapeHtml(String text) {
+        if (text == null) {
+            return "";
+        }
+        return text.replace("&", "&amp;")
+                   .replace("<", "&lt;")
+                   .replace(">", "&gt;")
+                   .replace("\"", "&quot;")
+                   .replace("'", "&#39;");
     }
     
     /**

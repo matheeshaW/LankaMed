@@ -92,7 +92,14 @@ public class PatientVisitDataProvider implements IReportDataProvider {
         Map<String, Object> data = new HashMap<>();
         long totalVisits = visitRepository.count(spec);
         data.put("totalVisits", totalVisits);
-        data.put("uniquePatients", -1); // TODO: count distinct root.get("patient")
+        
+        // Count unique patients by getting distinct patient IDs
+        long uniquePatients = visitRepository.findAll(spec).stream()
+            .map(visit -> visit.getPatient().getPatientId())
+            .distinct()
+            .count();
+        data.put("uniquePatients", uniquePatients);
+        
         data.put("reportPeriod", criteria.getOrDefault("from", "N/A") + " - " + criteria.getOrDefault("to", "N/A"));
         return data;
     }
