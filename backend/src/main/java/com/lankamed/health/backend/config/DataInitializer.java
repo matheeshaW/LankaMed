@@ -2,6 +2,7 @@ package com.lankamed.health.backend.config;
 
 import com.lankamed.health.backend.model.*;
 import com.lankamed.health.backend.repository.*;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
@@ -12,6 +13,9 @@ import java.util.List;
 
 @Component
 public class DataInitializer implements CommandLineRunner {
+
+    @Value("${app.data.initialize:true}")
+    private boolean shouldInitializeData;
 
     private final UserRepository userRepository;
     private final HospitalRepository hospitalRepository;
@@ -41,6 +45,12 @@ public class DataInitializer implements CommandLineRunner {
     public void run(String... args) throws Exception {
         try {
             System.out.println("DataInitializer: Starting initialization check...");
+            System.out.println("DataInitializer: Data initialization enabled: " + shouldInitializeData);
+            
+            if (!shouldInitializeData) {
+                System.out.println("DataInitializer: Data initialization is disabled, skipping...");
+                return;
+            }
             
             // Add a small delay to ensure database is fully ready
             Thread.sleep(2000);
@@ -52,9 +62,14 @@ public class DataInitializer implements CommandLineRunner {
             long doctorCount = staffDetailsRepository.count();
             System.out.println("DataInitializer: Current doctor count: " + doctorCount);
             
-            // Always create sample data for testing (remove this check in production)
-            System.out.println("DataInitializer: Creating sample data for testing...");
-            createSampleData();
+            // Only create sample data if database is empty (first time setup)
+            if (userCount == 0 && doctorCount == 0) {
+                System.out.println("DataInitializer: Database is empty, creating initial sample data...");
+                createSampleData();
+            } else {
+                System.out.println("DataInitializer: Database already contains data, skipping initialization.");
+                System.out.println("DataInitializer: Existing users: " + userCount + ", doctors: " + doctorCount);
+            }
             
         } catch (Exception e) {
             System.err.println("DataInitializer: Error during initialization: " + e.getMessage());
