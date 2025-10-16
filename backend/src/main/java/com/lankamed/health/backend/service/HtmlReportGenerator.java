@@ -11,22 +11,15 @@ public class HtmlReportGenerator implements IReportGenerator {
     @Override
     public String generate(Map<String, Object> data, Map<String, Object> meta) {
         try {
-            System.out.println("=== HtmlReportGenerator: Starting report generation ===");
-            System.out.println("Data keys: " + data.keySet());
-            System.out.println("Meta keys: " + meta.keySet());
-            
             // Extract criteria for display
             @SuppressWarnings("unchecked")
             Map<String, Object> metaCriteria = meta.get("criteria") instanceof Map 
                 ? (Map<String, Object>) meta.get("criteria") 
                 : Map.of();
             
-            System.out.println("Criteria keys: " + metaCriteria.keySet());
-            System.out.println("Criteria values: " + metaCriteria);
-            
             String reportTitle = (String) meta.getOrDefault("title", "Statistical Report");
             
-            // Build professional HTML report
+            // Build professional HTML report with XHTML structure for PDF compatibility
             StringBuilder html = new StringBuilder();
             html.append("<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\" ")
                 .append("\"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">\n")
@@ -55,18 +48,16 @@ public class HtmlReportGenerator implements IReportGenerator {
                 .append("</head>\n")
                 .append("<body>\n");
             
-            // Header
+            // Header section with report title and generation timestamp
             html.append("  <div class=\"header\">\n")
                 .append("    <h1>").append(reportTitle).append("</h1>\n")
                 .append("    <p>Generated on: ").append(java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("MMMM dd, yyyy 'at' hh:mm a"))).append("</p>\n")
                 .append("  </div>\n");
             
-            // Report Criteria Section
+            // Report criteria section showing filter parameters
             html.append("  <div class=\"section\">\n")
                 .append("    <h2>Report Criteria</h2>\n")
                 .append("    <table class=\"criteria-grid\">\n");
-            
-            System.out.println("Building criteria table...");
             
             String fromDate = metaCriteria.get("from") != null ? String.valueOf(metaCriteria.get("from")) : "N/A";
             String toDate = metaCriteria.get("to") != null ? String.valueOf(metaCriteria.get("to")) : "N/A";
@@ -88,12 +79,10 @@ public class HtmlReportGenerator implements IReportGenerator {
                 : "All";
             appendCriteriaRowTable(html, "Age Range", ageRange);
             
-            System.out.println("Criteria table built successfully");
-            
             html.append("    </table>\n")
                 .append("  </div>\n");
             
-            // KPI Section
+            // KPI section displaying statistical data in 2-column grid
             html.append("  <div class=\"section\">\n")
                 .append("    <h2>Key Performance Indicators</h2>\n")
                 .append("    <table class=\"kpi-table\">\n");
@@ -115,7 +104,7 @@ public class HtmlReportGenerator implements IReportGenerator {
                 if (count % 2 == 0 || count == data.size()) {
                     // Close row if we have 2 KPIs or it's the last one
                     if (count % 2 == 1 && count == data.size()) {
-                        // Add empty cell if odd number of KPIs
+                        // Add empty cell if odd number of KPIs for proper table structure
                         html.append("        <td></td>\n");
                     }
                     html.append("      </tr>\n");
@@ -125,18 +114,14 @@ public class HtmlReportGenerator implements IReportGenerator {
             html.append("    </table>\n")
                 .append("  </div>\n");
             
-            // Footer
+            // Footer with system branding
             html.append("  <div class=\"footer\">\n")
                 .append("    <p>LankaMed Healthcare System | Confidential Report</p>\n")
                 .append("  </div>\n");
             
             html.append("</body>\n</html>");
             
-            String result = html.toString();
-            System.out.println("=== HtmlReportGenerator: Report generated successfully ===");
-            System.out.println("HTML length: " + result.length());
-            
-            return result;
+            return html.toString();
             
         } catch (Exception e) {
             throw new RuntimeException("Failed to generate HTML report: " + e.getMessage(), e);
@@ -144,13 +129,11 @@ public class HtmlReportGenerator implements IReportGenerator {
     }
     
     /**
-     * Helper method to append a criteria row to HTML table
+     * Appends a criteria row to the HTML table with proper escaping
      */
     private void appendCriteriaRowTable(StringBuilder html, String label, Object value) {
         String safeLabel = escapeHtml(label);
         String safeValue = escapeHtml(value != null ? String.valueOf(value) : "N/A");
-        
-        System.out.println("  Adding criteria row: " + label + " = " + safeValue);
         
         html.append("      <tr class=\"criteria-row\">\n")
             .append("        <td class=\"criteria-label\">").append(safeLabel).append(":</td>\n")
@@ -159,7 +142,7 @@ public class HtmlReportGenerator implements IReportGenerator {
     }
     
     /**
-     * Escapes HTML special characters to ensure XHTML compliance
+     * Escapes HTML special characters to prevent XSS and ensure XHTML compliance
      */
     private String escapeHtml(String text) {
         if (text == null) {
@@ -173,14 +156,11 @@ public class HtmlReportGenerator implements IReportGenerator {
     }
     
     /**
-     * Formats camelCase or snake_case labels to Title Case
+     * Converts camelCase/snake_case keys to human-readable Title Case labels
      */
     private String formatLabel(String key) {
-        // Convert camelCase to spaces
         String formatted = key.replaceAll("([A-Z])", " $1").trim();
-        // Convert snake_case to spaces
         formatted = formatted.replace("_", " ");
-        // Capitalize first letter of each word
         String[] words = formatted.split("\\s+");
         StringBuilder result = new StringBuilder();
         for (String word : words) {
