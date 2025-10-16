@@ -4,6 +4,7 @@ import { getRole } from '../utils/auth';
 import PersonalInformationCard from '../components/patient/PersonalInformationCard';
 import EmergencyContactCard from '../components/patient/EmergencyContactCard';
 import MedicalHistoryCard from '../components/patient/MedicalHistoryCard';
+import DownloadReportsButton from '../components/patient/DownloadReportsButton';
 
 const PatientDashboard = () => {
     const navigate = useNavigate();
@@ -24,6 +25,7 @@ const PatientDashboard = () => {
                     <div className="lg:col-span-1 space-y-8">
                         <PersonalInformationCard />
                         <EmergencyContactCard />
+                        <DownloadReportsButton />
                     </div>
                     
                     {/* Middle-Right Column - Medical History */}
