@@ -1,11 +1,11 @@
-package com.lankamed.health.backend.service;
+package com.lankamed.health.backend.service.patient;
 
 import com.lankamed.health.backend.dto.patient.PatientProfileDto;
 import com.lankamed.health.backend.dto.patient.UpdatePatientProfileDto;
 import com.lankamed.health.backend.model.patient.Patient;
 import com.lankamed.health.backend.repository.patient.PatientRepository;
 import com.lankamed.health.backend.repository.UserRepository;
-import com.lankamed.health.backend.service.patient.PatientService;
+
 import com.lankamed.health.backend.model.User;
 import com.lankamed.health.backend.model.Role;
 import org.junit.jupiter.api.BeforeEach;
@@ -24,7 +24,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
+
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -126,7 +126,8 @@ class PatientServiceTest {
 
         when(patientRepository.findByUserEmail("john.doe@example.com"))
                 .thenReturn(Optional.of(testPatient));
-        when(userRepository.save(any(User.class))).thenReturn(testUser);
+    when(userRepository.findByEmail("john.doe@example.com")).thenReturn(Optional.of(testUser));
+    when(userRepository.save(any(User.class))).thenReturn(testUser);
         when(patientRepository.save(any(Patient.class))).thenReturn(testPatient);
 
         // When
@@ -144,16 +145,19 @@ class PatientServiceTest {
         UpdatePatientProfileDto updateDto = new UpdatePatientProfileDto();
         updateDto.setFirstName("Jane");
 
+        // If the user record is missing, the service should throw the specific user-not-found message
         when(patientRepository.findByUserEmail("john.doe@example.com"))
                 .thenReturn(Optional.empty());
+        when(userRepository.findByEmail("john.doe@example.com")).thenReturn(Optional.empty());
 
         // When & Then
         RuntimeException exception = assertThrows(RuntimeException.class, () -> {
             patientService.updatePatientProfile(updateDto);
         });
 
-        assertEquals("Patient not found", exception.getMessage());
+        assertEquals("User not found while updating patient", exception.getMessage());
         verify(patientRepository).findByUserEmail("john.doe@example.com");
+        verify(userRepository).findByEmail("john.doe@example.com");
         verify(userRepository, never()).save(any(User.class));
         verify(patientRepository, never()).save(any(Patient.class));
     }

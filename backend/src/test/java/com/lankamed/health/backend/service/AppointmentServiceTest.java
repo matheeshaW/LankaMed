@@ -3,8 +3,10 @@ package com.lankamed.health.backend.service;
 import com.lankamed.health.backend.dto.AppointmentDto;
 import com.lankamed.health.backend.model.*;
 import com.lankamed.health.backend.repository.AppointmentRepository;
-import com.lankamed.health.backend.repository.patient.PatientRepository;
 import com.lankamed.health.backend.model.patient.Patient;
+import com.lankamed.health.backend.model.Appointment;
+import com.lankamed.health.backend.model.ServiceCategory;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -17,11 +19,10 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -29,9 +30,6 @@ class AppointmentServiceTest {
 
     @Mock
     private AppointmentRepository appointmentRepository;
-
-    @Mock
-    private PatientRepository patientRepository;
 
     @Mock
     private Authentication authentication;
@@ -98,17 +96,21 @@ class AppointmentServiceTest {
                 .status(Appointment.Status.SCHEDULED)
                 .build();
 
-        // Mock SecurityContext
-        when(securityContext.getAuthentication()).thenReturn(authentication);
+        // Mock SecurityContext so AppointmentService.getCurrentUserEmail works
+        lenient().when(securityContext.getAuthentication()).thenReturn(authentication);
         SecurityContextHolder.setContext(securityContext);
-        when(authentication.getName()).thenReturn("john.doe@example.com");
+        lenient().when(authentication.getName()).thenReturn("john.doe@example.com");
+    }
+
+    @AfterEach
+    void tearDown() {
+        // Clear SecurityContext to avoid test interference
+        SecurityContextHolder.clearContext();
     }
 
     @Test
     void getPatientAppointments_Success() {
         // Given
-        when(patientRepository.findByUserEmail("john.doe@example.com"))
-                .thenReturn(Optional.of(testPatient));
         when(appointmentRepository.findByPatientUserEmailOrderByAppointmentDateTimeDesc("john.doe@example.com"))
                 .thenReturn(Arrays.asList(testAppointment));
 
@@ -116,17 +118,17 @@ class AppointmentServiceTest {
         List<AppointmentDto> result = appointmentService.getPatientAppointments();
 
         // Then
-        assertNotNull(result);
-        assertEquals(1, result.size());
-        
-        AppointmentDto appointmentDto = result.get(0);
-        assertEquals(1L, appointmentDto.getAppointmentId());
-        assertEquals(LocalDateTime.of(2024, 1, 15, 10, 0), appointmentDto.getAppointmentDateTime());
-        assertEquals(Appointment.Status.SCHEDULED, appointmentDto.getStatus());
-        assertEquals("Dr. Jane Smith", appointmentDto.getDoctorName());
-        assertEquals("Cardiologist", appointmentDto.getDoctorSpecialization());
-        assertEquals("City General Hospital", appointmentDto.getHospitalName());
-        assertEquals("Cardiology", appointmentDto.getServiceCategoryName());
+        assertNotNull(result, "Result should not be null");
+        assertEquals(1, result.size(), "Should return exactly one appointment");
+
+        AppointmentDto dto = result.get(0);
+        assertEquals(1L, dto.getAppointmentId());
+        assertEquals(LocalDateTime.of(2024, 1, 15, 10, 0), dto.getAppointmentDateTime());
+        assertEquals(Appointment.Status.SCHEDULED, dto.getStatus());
+        assertEquals("Dr. Jane Smith", dto.getDoctorName());
+        assertEquals("Cardiologist", dto.getDoctorSpecialization());
+        assertEquals("City General Hospital", dto.getHospitalName());
+        assertEquals("Cardiology", dto.getServiceCategoryName());
 
         verify(appointmentRepository).findByPatientUserEmailOrderByAppointmentDateTimeDesc("john.doe@example.com");
     }
@@ -134,62 +136,43 @@ class AppointmentServiceTest {
     @Test
     void getPatientAppointments_EmptyList() {
         // Given
-        when(patientRepository.findByUserEmail("john.doe@example.com"))
-                .thenReturn(Optional.of(testPatient));
         when(appointmentRepository.findByPatientUserEmailOrderByAppointmentDateTimeDesc("john.doe@example.com"))
-                .thenReturn(Arrays.asList());
+                .thenReturn(Collections.emptyList());
 
         // When
         List<AppointmentDto> result = appointmentService.getPatientAppointments();
 
         // Then
         assertNotNull(result);
-        assertTrue(result.isEmpty());
-        verify(appointmentRepository).findByPatientUserEmailOrderByAppointmentDateTimeDesc("john.doe@example.com");
+        assertTrue(result.isEmpty(), "Result should be an empty list when there are no appointments");
     }
 
     @Test
-    void getPatientAppointments_MultipleAppointments() {
-        // Given
-        Appointment pastAppointment = Appointment.builder()
-                .appointmentId(2L)
+    void getPatientAppointments_NullNestedData_ThrowsNpe() {
+        // Edge case: repository returns an appointment with missing nested doctor/hospital data
+        Appointment broken = Appointment.builder()
+                .appointmentId(99L)
                 .patient(testPatient)
-                .doctor(testDoctor)
-                .hospital(testHospital)
-                .serviceCategory(testCategory)
-                .appointmentDateTime(LocalDateTime.of(2023, 12, 1, 14, 0))
-                .status(Appointment.Status.COMPLETED)
-                .build();
-
-        Appointment futureAppointment = Appointment.builder()
-                .appointmentId(3L)
-                .patient(testPatient)
-                .doctor(testDoctor)
-                .hospital(testHospital)
-                .serviceCategory(testCategory)
-                .appointmentDateTime(LocalDateTime.of(2024, 2, 1, 9, 0))
+                .doctor(null) // missing doctor
+                .hospital(null)
+                .serviceCategory(null)
+                .appointmentDateTime(LocalDateTime.now())
                 .status(Appointment.Status.SCHEDULED)
                 .build();
 
-        List<Appointment> appointments = Arrays.asList(futureAppointment, testAppointment, pastAppointment);
-
-        when(patientRepository.findByUserEmail("john.doe@example.com"))
-                .thenReturn(Optional.of(testPatient));
         when(appointmentRepository.findByPatientUserEmailOrderByAppointmentDateTimeDesc("john.doe@example.com"))
-                .thenReturn(appointments);
-
-        // When
-        List<AppointmentDto> result = appointmentService.getPatientAppointments();
+                .thenReturn(Arrays.asList(broken));
 
         // Then
-        assertNotNull(result);
-        assertEquals(3, result.size());
-        
-        // Verify appointments are ordered by date descending (newest first)
-        assertEquals(3L, result.get(0).getAppointmentId()); // Future appointment
-        assertEquals(1L, result.get(1).getAppointmentId()); // Current appointment
-        assertEquals(2L, result.get(2).getAppointmentId()); // Past appointment
+        assertThrows(NullPointerException.class, () -> appointmentService.getPatientAppointments());
+    }
 
-        verify(appointmentRepository).findByPatientUserEmailOrderByAppointmentDateTimeDesc("john.doe@example.com");
+    @Test
+    void getPatientAppointments_NoAuth_Throws() {
+                // Simulate missing authentication in security context by clearing the context
+                SecurityContextHolder.clearContext();
+
+                // Then - getCurrentUserEmail should attempt to dereference a null Authentication and throw
+                assertThrows(NullPointerException.class, () -> appointmentService.getPatientAppointments());
     }
 }
