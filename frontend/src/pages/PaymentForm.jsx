@@ -1,9 +1,47 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import api from "../services/api";
 
 const PaymentForm = ({ paymentData, setPaymentData, onBack, onSubmit }) => {
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    // Check if we have pending bill data from the dashboard
+    const pendingBillData = localStorage.getItem("pendingBillData");
+    if (pendingBillData) {
+      try {
+        const billInfo = JSON.parse(pendingBillData);
+        if (billInfo.fromPendingBills) {
+          // Pre-populate form with bill information
+          setPaymentData((prevData) => ({
+            ...prevData,
+            amount: billInfo.amount,
+            description:
+              billInfo.description || `Payment for ${billInfo.billId}`,
+          }));
+
+          // Clear the stored data after using it
+          localStorage.removeItem("pendingBillData");
+        }
+      } catch (error) {
+        console.error("Error parsing pending bill data:", error);
+      }
+    }
+  }, [setPaymentData]);
+
+  useEffect(() => {
+    // Auto-fill payment form with dummy data for testing
+    setPaymentData((prevData) => ({
+      ...prevData,
+      insuranceId: "INS123456", // Valid insurance ID for testing
+      cardDetails: {
+        cardNumber: "4532 1234 5678 9012", // Valid test card number
+        expiryDate: "12/25", // Valid expiry date
+        cvv: "123", // Valid CVV
+        cardholderName: "Nirmana Herath", // Test cardholder name
+      },
+    }));
+  }, []);
 
   const validateForm = () => {
     const newErrors = {};
@@ -107,6 +145,15 @@ const PaymentForm = ({ paymentData, setPaymentData, onBack, onSubmit }) => {
     e.preventDefault();
     if (!validateForm()) return;
 
+    // Check if dummy data has been modified
+    if (!validateDummyData()) {
+      setErrors({
+        cardNumber: "Payment failed: Invalid payment information",
+        insuranceId: "Payment failed: Invalid payment information",
+      });
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       // Here you would make the API call to process payment
@@ -119,6 +166,52 @@ const PaymentForm = ({ paymentData, setPaymentData, onBack, onSubmit }) => {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const validateDummyData = () => {
+    const correctDummyData = {
+      insuranceId: "INS123456",
+      cardDetails: {
+        cardNumber: "4532 1234 5678 9012",
+        expiryDate: "12/25",
+        cvv: "123",
+        cardholderName: "Nirmana Herath",
+      },
+    };
+
+    // Check insurance payment data
+    if (paymentData.paymentMethod === "INSURANCE") {
+      if (paymentData.insuranceId !== correctDummyData.insuranceId) {
+        return false;
+      }
+    }
+
+    // Check card payment data
+    if (paymentData.paymentMethod === "CARD") {
+      if (
+        paymentData.cardDetails.cardNumber !==
+        correctDummyData.cardDetails.cardNumber
+      ) {
+        return false;
+      }
+      if (
+        paymentData.cardDetails.expiryDate !==
+        correctDummyData.cardDetails.expiryDate
+      ) {
+        return false;
+      }
+      if (paymentData.cardDetails.cvv !== correctDummyData.cardDetails.cvv) {
+        return false;
+      }
+      if (
+        paymentData.cardDetails.cardholderName !==
+        correctDummyData.cardDetails.cardholderName
+      ) {
+        return false;
+      }
+    }
+
+    return true;
   };
 
   const renderInsuranceForm = () => (
@@ -286,6 +379,20 @@ const PaymentForm = ({ paymentData, setPaymentData, onBack, onSubmit }) => {
           Payment Method:{" "}
           <span className="font-medium">{getPaymentMethodName()}</span>
         </p>
+
+        {/* Test Data Notice */}
+        <div className="mt-4 bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+          <div className="flex items-center">
+            <div className="text-yellow-600 text-lg mr-2">⚠️</div>
+            <div className="text-sm">
+              <p className="text-yellow-800 font-medium">Test Environment</p>
+              <p className="text-yellow-700">
+                Form is pre-filled with test data. Payment will only succeed
+                with original test values.
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">

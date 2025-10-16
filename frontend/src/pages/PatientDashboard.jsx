@@ -22,6 +22,20 @@ const PatientDashboard = () => {
     navigate("/patient/payment");
   };
 
+  const handlePayBill = (billId, amount, description) => {
+    // Store bill details in localStorage to pass to payment flow
+    localStorage.setItem(
+      "pendingBillData",
+      JSON.stringify({
+        billId,
+        amount,
+        description,
+        fromPendingBills: true,
+      })
+    );
+    navigate("/patient/payment");
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -71,7 +85,16 @@ const PatientDashboard = () => {
                     <div className="text-sm font-bold text-red-600">
                       LKR 3,500.00
                     </div>
-                    <button className="text-xs bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700">
+                    <button
+                      onClick={() =>
+                        handlePayBill(
+                          "BM-2024-00345",
+                          3500,
+                          "General Consultation - Dr. Smith"
+                        )
+                      }
+                      className="text-xs bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700"
+                    >
                       Pay
                     </button>
                   </div>
@@ -91,7 +114,16 @@ const PatientDashboard = () => {
                     <div className="text-sm font-bold text-red-600">
                       LKR 2,250.00
                     </div>
-                    <button className="text-xs bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700">
+                    <button
+                      onClick={() =>
+                        handlePayBill(
+                          "BM-2024-00342",
+                          2250,
+                          "Blood Test - Laboratory Services"
+                        )
+                      }
+                      className="text-xs bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700"
+                    >
                       Pay
                     </button>
                   </div>
@@ -111,7 +143,16 @@ const PatientDashboard = () => {
                     <div className="text-sm font-bold text-red-600">
                       LKR 4,200.00
                     </div>
-                    <button className="text-xs bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700">
+                    <button
+                      onClick={() =>
+                        handlePayBill(
+                          "BM-2024-00338",
+                          4200,
+                          "ECG Test - Cardiology Department"
+                        )
+                      }
+                      className="text-xs bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700"
+                    >
                       Pay
                     </button>
                   </div>
@@ -131,7 +172,16 @@ const PatientDashboard = () => {
                     <div className="text-sm font-bold text-red-600">
                       LKR 5,800.00
                     </div>
-                    <button className="text-xs bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700">
+                    <button
+                      onClick={() =>
+                        handlePayBill(
+                          "BM-2024-00335",
+                          5800,
+                          "X-Ray - Radiology Department"
+                        )
+                      }
+                      className="text-xs bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700"
+                    >
                       Pay
                     </button>
                   </div>
