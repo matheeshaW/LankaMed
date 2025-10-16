@@ -1,4 +1,4 @@
-package com.lankamed.health.backend.service;
+package com.lankamed.health.backend.service.patient;
 
 import com.lankamed.health.backend.dto.patient.MedicalConditionDto;
 import com.lankamed.health.backend.dto.patient.CreateMedicalConditionDto;
@@ -9,7 +9,7 @@ import com.lankamed.health.backend.repository.patient.PatientRepository;
 import com.lankamed.health.backend.repository.patient.MedicalConditionRepository;
 import com.lankamed.health.backend.repository.patient.AllergyRepository;
 import com.lankamed.health.backend.repository.patient.PrescriptionRepository;
-import com.lankamed.health.backend.service.patient.MedicalHistoryService;
+
 import com.lankamed.health.backend.model.User;
 import com.lankamed.health.backend.model.patient.Patient;
 import com.lankamed.health.backend.model.patient.MedicalCondition;
@@ -34,7 +34,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
+
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -129,8 +129,6 @@ class MedicalHistoryServiceTest {
     @Test
     void getMedicalConditions_Success() {
         // Given
-        when(patientRepository.findByUserEmail("john.doe@example.com"))
-                .thenReturn(Optional.of(testPatient));
         when(medicalConditionRepository.findByPatientUserEmail("john.doe@example.com"))
                 .thenReturn(Arrays.asList(testCondition));
 
@@ -228,8 +226,6 @@ class MedicalHistoryServiceTest {
     @Test
     void getAllergies_Success() {
         // Given
-        when(patientRepository.findByUserEmail("john.doe@example.com"))
-                .thenReturn(Optional.of(testPatient));
         when(allergyRepository.findByPatientUserEmail("john.doe@example.com"))
                 .thenReturn(Arrays.asList(testAllergy));
 
@@ -269,8 +265,6 @@ class MedicalHistoryServiceTest {
     @Test
     void getPrescriptions_Success() {
         // Given
-        when(patientRepository.findByUserEmail("john.doe@example.com"))
-                .thenReturn(Optional.of(testPatient));
         when(prescriptionRepository.findByPatientUserEmail("john.doe@example.com"))
                 .thenReturn(Arrays.asList(testPrescription));
 
