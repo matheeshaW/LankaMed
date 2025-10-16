@@ -1,4 +1,10 @@
 {
+  "name": "lankamed-backend-tests",
+  "private": true,
+  "scripts": {
+    "test": "mvn -q -DskipITs -Dtest=*Appointment*Test,*AppointmentControllerTest,*UserDataControllerTest,*AdminControllerTest test",
+    "coverage": "mvn -q -DskipITs -Dtest=*Appointment*Test,*AppointmentControllerTest,*UserDataControllerTest,*AdminControllerTest test jacoco:report && echo Coverage report: target/site/jacoco/index.html"
+  },
   "dependencies": {
     "chart.js": "^4.5.1",
     "react-chartjs-2": "^5.3.0"

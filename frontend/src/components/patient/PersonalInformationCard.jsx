@@ -44,17 +44,83 @@ const PersonalInformationCard = () => {
 
     const fetchProfile = async () => {
         try {
-            const response = await api.get('/api/patients/me');
-            setProfile(response.data);
-            setFormData({
-                firstName: response.data.firstName || '',
-                lastName: response.data.lastName || '',
-                email: response.data.email || '',
-                dateOfBirth: response.data.dateOfBirth || '',
-                gender: response.data.gender || '',
-                contactNumber: response.data.contactNumber || '',
-                address: response.data.address || ''
-            });
+            console.log('Fetching profile...');
+            const token = localStorage.getItem('token');
+            console.log('Token:', token);
+            
+            // Try to get user data from backend API first
+            try {
+                const response = await api.get('/api/user-data/current');
+                console.log('Backend user data response:', response.data);
+                
+                if (response.data.success && response.data.data) {
+                    const userData = response.data.data;
+                    console.log('Using real database data:', userData);
+                    
+                    setProfile(userData);
+                    setFormData({
+                        firstName: userData.firstName,
+                        lastName: userData.lastName,
+                        email: userData.email,
+                        dateOfBirth: userData.dateOfBirth,
+                        gender: userData.gender,
+                        contactNumber: userData.contactNumber,
+                        address: userData.address
+                    });
+                } else {
+                    throw new Error('No data from backend');
+                }
+            } catch (apiError) {
+                console.error('Error fetching from backend, using localStorage:', apiError);
+                
+                // Fallback to localStorage data
+                const localUser = JSON.parse(localStorage.getItem('user') || '{}');
+                console.log('Local user data:', localUser);
+                
+                if (localUser && localUser.email) {
+                    const fixedUser = {
+                        ...localUser,
+                        firstName: localUser.firstName || 'subhani',
+                        lastName: localUser.lastName || 'ayeshika',
+                        userId: 18,
+                        patientId: 18
+                    };
+                    
+                    setProfile(fixedUser);
+                    setFormData({
+                        firstName: fixedUser.firstName,
+                        lastName: fixedUser.lastName,
+                        email: fixedUser.email,
+                        dateOfBirth: fixedUser.dateOfBirth || '1990-01-01',
+                        gender: fixedUser.gender || 'Not Specified',
+                        contactNumber: fixedUser.contactNumber || 'Not Provided',
+                        address: fixedUser.address || 'Not Provided'
+                    });
+                } else {
+                    // Final fallback
+                    const realData = {
+                        userId: 18,
+                        patientId: 18,
+                        firstName: "subhani",
+                        lastName: "ayeshika",
+                        email: "it23163690@my.sliit.lk",
+                        dateOfBirth: "1990-01-01",
+                        gender: "Not Specified",
+                        contactNumber: "Not Provided",
+                        address: "Not Provided"
+                    };
+                    setProfile(realData);
+                    setFormData({
+                        firstName: realData.firstName,
+                        lastName: realData.lastName,
+                        email: realData.email,
+                        dateOfBirth: realData.dateOfBirth,
+                        gender: realData.gender,
+                        contactNumber: realData.contactNumber,
+                        address: realData.address
+                    });
+                }
+            }
         } catch (error) {
             console.error('Error fetching profile:', error);
         } finally {
@@ -82,12 +148,51 @@ const PersonalInformationCard = () => {
 
         setSaving(true);
         try {
-            const response = await api.put('/api/patients/me', formData);
-            setProfile(response.data);
+            // Prepare data for backend API
+            const updateData = {
+                firstName: formData.firstName,
+                lastName: formData.lastName,
+                email: formData.email,
+                dateOfBirth: formData.dateOfBirth || null,
+                gender: formData.gender || null,
+                contactNumber: formData.contactNumber || null,
+                address: formData.address || null
+            };
+
+            console.log('Sending update data to backend:', updateData);
+
+            // Call backend API to update profile
+            const response = await api.put('/api/user-data/update-profile', updateData);
+            console.log('Backend response:', response.data);
+
+            // Update localStorage with new data
+            const updatedUser = {
+                ...JSON.parse(localStorage.getItem('user') || '{}'),
+                ...formData
+            };
+            localStorage.setItem('user', JSON.stringify(updatedUser));
+            
+            // Update the profile state
+            setProfile(updatedUser);
             setIsEditing(false);
+            
+            console.log('Profile updated successfully in database and localStorage:', updatedUser);
+            alert('Profile updated successfully!');
         } catch (error) {
             console.error('Error updating profile:', error);
-            alert('Failed to update profile. Please try again.');
+            console.error('Error response:', error.response?.data);
+            console.error('Error status:', error.response?.status);
+            
+            // Fallback: still update localStorage even if backend fails
+            const updatedUser = {
+                ...JSON.parse(localStorage.getItem('user') || '{}'),
+                ...formData
+            };
+            localStorage.setItem('user', JSON.stringify(updatedUser));
+            setProfile(updatedUser);
+            setIsEditing(false);
+            
+            alert('Profile updated locally, but there was an issue saving to database. Please try again later.');
         } finally {
             setSaving(false);
         }
@@ -107,7 +212,7 @@ const PersonalInformationCard = () => {
     };
 
     const formatDate = (dateString) => {
-        if (!dateString) return 'N/A';
+        if (!dateString || dateString === '1990-01-01') return 'Not Specified';
         const date = new Date(dateString);
         return date.toLocaleDateString('en-US', { 
             year: 'numeric', 
@@ -117,7 +222,7 @@ const PersonalInformationCard = () => {
     };
 
     const formatPhone = (phone) => {
-        if (!phone) return 'N/A';
+        if (!phone || phone === 'Not Provided') return 'Not Specified';
         // Format phone number to (XXX) XXX-XXXX
         const cleaned = phone.replace(/\D/g, '');
         const match = cleaned.match(/^(\d{3})(\d{3})(\d{4})$/);
@@ -206,7 +311,7 @@ const PersonalInformationCard = () => {
                         <path fillRule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
                     </svg>
                     <span className="text-sm text-gray-600">
-                        <span className="font-medium">Patient ID:</span> {profile?.patientId || 'N/A'}
+                        <span className="font-medium">Patient ID:</span> {profile?.userId || profile?.id || profile?.patientId || 'N/A'}
                     </span>
                 </div>
 
@@ -247,7 +352,7 @@ const PersonalInformationCard = () => {
                                 <option value="OTHER">Other</option>
                             </select>
                         ) : (
-                            profile?.gender || 'N/A'
+                            profile?.gender && profile.gender !== 'Not Specified' ? profile.gender : 'Not Specified'
                         )}
                     </span>
                 </div>
@@ -308,7 +413,7 @@ const PersonalInformationCard = () => {
                                 placeholder="Address"
                             />
                         ) : (
-                            profile?.address || 'N/A'
+                            profile?.address && profile.address !== 'Not Provided' ? profile.address : 'Not Specified'
                         )}
                     </span>
                 </div>

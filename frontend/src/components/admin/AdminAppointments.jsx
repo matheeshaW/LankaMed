@@ -1,0 +1,498 @@
+import React, { useState, useEffect } from 'react';
+import { appointmentAPI } from '../../services/api';
+import api from '../../services/api';
+
+const AdminAppointments = () => {
+  const [appointments, setAppointments] = useState([]);
+  const [filteredAppointments, setFilteredAppointments] = useState([]);
+  const [filter, setFilter] = useState('all');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortBy, setSortBy] = useState('date');
+  const [sortOrder, setSortOrder] = useState('desc');
+  const [successMessage, setSuccessMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
+  const [loading, setLoading] = useState(false);
+  useEffect(() => {
+    loadAppointments();
+  }, []);
+
+
+  useEffect(() => {
+    filterAndSortAppointments();
+  }, [appointments, filter, searchTerm, sortBy, sortOrder]);
+
+  const loadAppointments = async () => {
+    setLoading(true);
+    try {
+      const response = await appointmentAPI.getAllAppointments();
+      if (response.data.success) {
+        setAppointments(response.data.appointments);
+      } else {
+        console.error('Error loading appointments:', response.data.error);
+        setErrorMessage('Failed to load appointments');
+        setTimeout(() => setErrorMessage(''), 3000);
+      }
+    } catch (error) {
+      console.error('Error loading appointments:', error);
+      setErrorMessage('Failed to load appointments');
+      setTimeout(() => setErrorMessage(''), 3000);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filterAndSortAppointments = () => {
+    if (!Array.isArray(appointments)) {
+      setFilteredAppointments([]);
+      return;
+    }
+    
+    let filtered = [...appointments];
+
+    // Filter by status (priority items will be shown only in priority box, not here)
+    if (filter !== 'all') {
+      filtered = filtered.filter(appointment => appointment.status === filter);
+    }
+    // Exclude priority appointments from the main list
+    filtered = filtered.filter(a => a.priority !== true);
+
+    // Filter by search term
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      filtered = filtered.filter(appointment =>
+        appointment.doctorName.toLowerCase().includes(term) ||
+        appointment.doctorSpecialization.toLowerCase().includes(term) ||
+        appointment.hospitalName.toLowerCase().includes(term) ||
+        appointment.serviceCategoryName.toLowerCase().includes(term)
+      );
+    }
+
+    // Sort appointments
+    filtered.sort((a, b) => {
+      let aValue, bValue;
+      
+      switch (sortBy) {
+        case 'date':
+          aValue = new Date(a.appointmentDateTime);
+          bValue = new Date(b.appointmentDateTime);
+          break;
+        case 'doctor':
+          aValue = a.doctorName.toLowerCase();
+          bValue = b.doctorName.toLowerCase();
+          break;
+        case 'status':
+          aValue = a.status;
+          bValue = b.status;
+          break;
+        default:
+          return 0;
+      }
+
+      if (sortOrder === 'asc') {
+        return aValue > bValue ? 1 : -1;
+      } else {
+        return aValue < bValue ? 1 : -1;
+      }
+    });
+
+    setFilteredAppointments(filtered);
+  };
+
+  const handleStatusUpdate = async (appointmentId, newStatus) => {
+    try {
+      const response = await appointmentAPI.updateAppointmentStatus(appointmentId, String(newStatus).toUpperCase());
+      const ok = response.status >= 200 && response.status < 300;
+      const payload = response?.data || {};
+      if (ok && (payload.success === true || payload.status)) {
+        const nextStatus = (payload.status || newStatus).toString().toUpperCase();
+        setAppointments(prev => prev.map(apt => (
+          apt.appointmentId === appointmentId ? { ...apt, status: nextStatus } : apt
+        )));
+        setSuccessMessage(`Appointment #${appointmentId} status updated to ${nextStatus}`);
+        setTimeout(() => setSuccessMessage(''), 2500);
+      } else {
+        throw new Error(payload.error || 'Update failed');
+      }
+    } catch (error) {
+      console.error('Error updating appointment status:', error);
+      setErrorMessage(error?.response?.data?.error || error?.message || 'Failed to update appointment status');
+      setTimeout(() => setErrorMessage(''), 3000);
+    }
+  };
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'PENDING':
+        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case 'APPROVED':
+        return 'bg-blue-100 text-blue-800 border-blue-200';
+      case 'CONFIRMED':
+        return 'bg-green-100 text-green-800 border-green-200';
+      case 'COMPLETED':
+        return 'bg-emerald-100 text-emerald-800 border-emerald-200';
+      case 'CANCELLED':
+        return 'bg-gray-100 text-gray-800 border-gray-200';
+      default:
+        return 'bg-gray-100 text-gray-800 border-gray-200';
+    }
+  };
+
+  const getStatusText = (status) => {
+    switch (status) {
+      case 'APPROVED':
+        return 'Approved';
+      case 'CONFIRMED':
+        return 'Confirmed';
+      case 'COMPLETED':
+        return 'Completed';
+      case 'CANCELLED':
+        return 'Cancelled';
+      default:
+        return status;
+    }
+  };
+
+  const getStatusIcon = (status) => {
+    switch (status) {
+      case 'APPROVED':
+        return '✅';
+      case 'CONFIRMED':
+        return '📅';
+      case 'COMPLETED':
+        return '🎉';
+      case 'CANCELLED':
+        return '🚫';
+      default:
+        return '📋';
+    }
+  };
+
+  const formatDate = (dateTimeString) => {
+    return new Date(dateTimeString).toLocaleDateString('en-US', {
+      weekday: 'short',
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
+
+  const formatTime = (dateTimeString) => {
+    return new Date(dateTimeString).toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    });
+  };
+
+  const getStatusCounts = () => {
+    const counts = {
+      SCHEDULED: 0,
+      COMPLETED: 0,
+      CANCELLED: 0
+    };
+
+    appointments.forEach(appointment => {
+      counts[appointment.status] = (counts[appointment.status] || 0) + 1;
+    });
+
+    return counts;
+  };
+
+  const statusCounts = getStatusCounts();
+
+  return (
+    <div className="max-w-7xl mx-auto space-y-8">
+      {/* Header */}
+      <div className="bg-gradient-to-r from-purple-600 to-indigo-600 rounded-2xl p-8 text-white">
+        <h1 className="text-3xl font-bold mb-4">Appointment Management</h1>
+        <p className="text-purple-100 text-lg">Manage and monitor all patient appointments</p>
+      </div>
+
+      {/* Success/Error Messages */}
+      {successMessage && (
+        <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg">
+          {successMessage}
+        </div>
+      )}
+      {errorMessage && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+          {errorMessage}
+        </div>
+      )}
+
+      {/* Statistics Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        {Object.entries(statusCounts).map(([status, count]) => (
+          <div key={status} className="bg-white rounded-xl shadow-lg p-6 text-center">
+            <div className={`text-3xl font-bold mb-2 ${getStatusColor(status).split(' ')[1]}`}>
+              {count}
+            </div>
+            <div className="text-sm text-gray-600">{getStatusText(status)}</div>
+          </div>
+        ))}
+      </div>
+
+
+      {/* Filters and Search */}
+      <div className="bg-white rounded-2xl shadow-lg p-6">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
+          <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
+            {/* Search */}
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
+              <input
+                type="text"
+                placeholder="Search appointments..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent w-full sm:w-64"
+              />
+            </div>
+
+            {/* Status Filter */}
+            <select
+              value={filter}
+              onChange={(e) => setFilter(e.target.value)}
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+            >
+              <option value="all">All Status</option>
+              <option value="PENDING">Pending</option>
+              <option value="APPROVED">Approved</option>
+              <option value="CONFIRMED">Confirmed</option>
+              <option value="COMPLETED">Completed</option>
+              <option value="REJECTED">Rejected</option>
+              <option value="CANCELLED">Cancelled</option>
+            </select>
+          </div>
+
+          <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
+            {/* Sort Options */}
+            <div className="flex space-x-2">
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
+              >
+                <option value="date">Date</option>
+                <option value="patient">Patient</option>
+                <option value="doctor">Doctor</option>
+                <option value="status">Status</option>
+              </select>
+              <select
+                value={sortOrder}
+                onChange={(e) => setSortOrder(e.target.value)}
+                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
+              >
+                <option value="desc">Desc</option>
+                <option value="asc">Asc</option>
+              </select>
+            </div>
+
+            <button
+              onClick={() => {
+                loadAppointments();
+                setSearchTerm('');
+                setFilter('all');
+              }}
+              className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors duration-200"
+            >
+              Refresh
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Priority Appointments */}
+      <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+        <div className="px-6 py-4 border-b border-gray-200">
+          <h3 className="text-lg font-semibold text-gray-800">Priority Appointments</h3>
+        </div>
+        <div className="p-4">
+          {Array.isArray(appointments) && appointments.filter(a=>a.priority === true).length > 0 ? (
+            <ul className="space-y-3">
+              {appointments.filter(a=>a.priority === true).map((apt)=> (
+                <li key={`p-${apt.appointmentId}`} className="flex items-center justify-between p-3 border rounded-lg bg-yellow-50">
+                  <div>
+                    <div className="font-medium text-gray-900">#{apt.appointmentId} • {apt.doctorName}</div>
+                    <div className="text-sm text-gray-600">{formatDate(apt.appointmentDateTime)} {formatTime(apt.appointmentDateTime)} • {apt.hospitalName}</div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="px-2 py-1 text-xs rounded bg-yellow-200 text-yellow-800 border border-yellow-300">PRIORITY</span>
+                    <select
+                      value={apt.status}
+                      onChange={(e)=>handleStatusUpdate(apt.appointmentId, e.target.value)}
+                      className="px-3 py-1 border border-yellow-300 rounded-lg bg-white focus:ring-2 focus:ring-yellow-400 focus:border-transparent text-sm"
+                    >
+                      <option value="APPROVED">Approved</option>
+                      <option value="CONFIRMED">Confirmed</option>
+                      <option value="COMPLETED">Completed</option>
+                      <option value="CANCELLED">Cancelled</option>
+                    </select>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <div className="text-gray-500 text-sm">No priority requests.</div>
+          )}
+        </div>
+      </div>
+
+      {/* Appointments Table */}
+      <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+        <div className="px-6 py-4 border-b border-gray-200">
+          <h3 className="text-lg font-semibold text-gray-800">
+            Appointments ({filteredAppointments.length})
+          </h3>
+        </div>
+
+        {filteredAppointments.length === 0 ? (
+          <div className="text-center py-12">
+            <div className="text-6xl mb-4">📋</div>
+            <h3 className="text-xl font-semibold text-gray-600 mb-2">No appointments found</h3>
+            <p className="text-gray-500">
+              {searchTerm || filter !== 'all' 
+                ? 'Try adjusting your search criteria or filters.' 
+                : 'No appointments have been booked yet.'
+              }
+            </p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Appointment ID
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Doctor
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Date & Time
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Hospital
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Status
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {filteredAppointments.map((appointment) => (
+                  <tr key={appointment.appointmentId} className="hover:bg-gray-50 transition-colors duration-200">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center">
+                        <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold mr-3">
+                          #{appointment.appointmentId}
+                        </div>
+                        <div>
+                          <div className="text-sm font-medium text-gray-900">
+                            Appointment #{appointment.appointmentId}
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            {appointment.serviceCategoryName}
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div>
+                        <div className="text-sm font-medium text-gray-900">
+                          {appointment.doctorName}
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          {appointment.doctorSpecialization}
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div>
+                        <div className="text-sm font-medium text-gray-900">
+                          {formatDate(appointment.appointmentDateTime)}
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          {formatTime(appointment.appointmentDateTime)}
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900">
+                        {appointment.hospitalName}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(appointment.status)}`}>
+                        <span className="mr-1">{getStatusIcon(appointment.status)}</span>
+                        {getStatusText(appointment.status)}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <select
+                        value={appointment.status}
+                        onChange={(e) => handleStatusUpdate(appointment.appointmentId, e.target.value)}
+                        className="px-3 py-1 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
+                      >
+                        <option value="APPROVED">Approved</option>
+                        <option value="CONFIRMED">Confirmed</option>
+                        <option value="COMPLETED">Completed</option>
+                        <option value="CANCELLED">Cancelled</option>
+                      </select>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* Appointment Details Modal (if needed) */}
+      {filteredAppointments.length > 0 && (
+        <div className="bg-white rounded-2xl shadow-lg p-6">
+          <h3 className="text-lg font-semibold text-gray-800 mb-4">Quick Actions</h3>
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => {
+                const scheduledCount = Array.isArray(appointments) ? appointments.filter(apt => apt.status === 'SCHEDULED').length : 0;
+                alert(`There are ${scheduledCount} scheduled appointments that need attention.`);
+              }}
+              className="px-4 py-2 bg-yellow-100 text-yellow-800 rounded-lg hover:bg-yellow-200 transition-colors duration-200"
+            >
+              View Scheduled ({statusCounts.SCHEDULED})
+            </button>
+            <button
+              onClick={() => {
+                const today = new Date().toISOString().split('T')[0];
+                const todayAppointments = Array.isArray(appointments) ? appointments.filter(apt => apt.appointmentDate === today) : [];
+                alert(`There are ${todayAppointments.length} appointments scheduled for today.`);
+              }}
+              className="px-4 py-2 bg-blue-100 text-blue-800 rounded-lg hover:bg-blue-200 transition-colors duration-200"
+            >
+              Today's Appointments
+            </button>
+            <button
+              onClick={() => {
+                const completedCount = statusCounts.COMPLETED;
+                alert(`Total completed appointments: ${completedCount}`);
+              }}
+              className="px-4 py-2 bg-green-100 text-green-800 rounded-lg hover:bg-green-200 transition-colors duration-200"
+            >
+              Completed ({statusCounts.COMPLETED})
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default AdminAppointments;

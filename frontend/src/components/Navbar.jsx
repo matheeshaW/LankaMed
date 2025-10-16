@@ -31,12 +31,20 @@ export default function Navbar() {
         {loggedIn ? (
           <>
             {role === "PATIENT" && (
-              <Link
-                to="/patient"
-                className="text-white hover:text-gray-100 transition font-medium"
-              >
-                Patient Dashboard
-              </Link>
+              <>
+                <Link
+                  to="/patient"
+                  className="text-white hover:text-gray-100 transition font-medium"
+                >
+                  Dashboard
+                </Link>
+                <Link
+                  to="/appointments"
+                  className="text-white hover:text-gray-100 transition font-medium"
+                >
+                  Appointments
+                </Link>
+              </>
             )}
             <Link
               to="/profile"

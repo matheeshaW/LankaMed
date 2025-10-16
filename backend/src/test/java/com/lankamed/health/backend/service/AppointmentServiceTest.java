@@ -93,7 +93,7 @@ class AppointmentServiceTest {
                 .hospital(testHospital)
                 .serviceCategory(testCategory)
                 .appointmentDateTime(LocalDateTime.of(2024, 1, 15, 10, 0))
-                .status(Appointment.Status.SCHEDULED)
+                .status(Appointment.Status.PENDING)
                 .build();
 
         // Mock SecurityContext so AppointmentService.getCurrentUserEmail works
@@ -118,6 +118,17 @@ class AppointmentServiceTest {
         List<AppointmentDto> result = appointmentService.getPatientAppointments();
 
         // Then
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        
+        AppointmentDto appointmentDto = result.get(0);
+        assertEquals(1L, appointmentDto.getAppointmentId());
+        assertEquals(LocalDateTime.of(2024, 1, 15, 10, 0), appointmentDto.getAppointmentDateTime());
+        assertEquals(Appointment.Status.PENDING, appointmentDto.getStatus());
+        assertEquals("Dr. Jane Smith", appointmentDto.getDoctorName());
+        assertEquals("Cardiologist", appointmentDto.getDoctorSpecialization());
+        assertEquals("City General Hospital", appointmentDto.getHospitalName());
+        assertEquals("Cardiology", appointmentDto.getServiceCategoryName());
         assertNotNull(result, "Result should not be null");
         assertEquals(1, result.size(), "Should return exactly one appointment");
 
@@ -153,6 +164,15 @@ class AppointmentServiceTest {
         Appointment broken = Appointment.builder()
                 .appointmentId(99L)
                 .patient(testPatient)
+                .doctor(testDoctor)
+                .hospital(testHospital)
+                .serviceCategory(testCategory)
+                .appointmentDateTime(LocalDateTime.of(2024, 2, 1, 9, 0))
+                .status(Appointment.Status.PENDING)
+                .build();
+
+        List<Appointment> appointments = Arrays.asList(futureAppointment, testAppointment, pastAppointment);
+
                 .doctor(null) // missing doctor
                 .hospital(null)
                 .serviceCategory(null)

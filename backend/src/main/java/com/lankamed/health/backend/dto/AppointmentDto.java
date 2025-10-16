@@ -16,6 +16,8 @@ public class AppointmentDto {
     private String doctorSpecialization;
     private String hospitalName;
     private String serviceCategoryName;
+    private boolean priority;
+    private Long doctorId;
 
     public static AppointmentDto fromAppointment(Appointment appointment) {
         return AppointmentDto.builder()
@@ -25,8 +27,10 @@ public class AppointmentDto {
                 .doctorName(appointment.getDoctor().getUser().getFirstName() + " " + 
                            appointment.getDoctor().getUser().getLastName())
                 .doctorSpecialization(appointment.getDoctor().getSpecialization())
+                .doctorId(appointment.getDoctor().getStaffId())
                 .hospitalName(appointment.getHospital().getName())
                 .serviceCategoryName(appointment.getServiceCategory().getName())
+                .priority(appointment.isPriority())
                 .build();
     }
 }
