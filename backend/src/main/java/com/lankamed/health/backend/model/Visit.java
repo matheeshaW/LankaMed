@@ -25,25 +25,49 @@ public class Visit {
     @JoinColumn(name = "patient_id", nullable = false)
     private Patient patient;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "service_category_id")
-    private ServiceCategory serviceCategory;
-
     @Column(name = "visit_date", nullable = false)
     private LocalDateTime visitDate;
 
     @Column(name = "notes", columnDefinition = "TEXT")
     private String notes;
 
+    @Column(name = "hospital_id")
+    private String hospitalId;
+
+    @Column(name = "service_category")
+    private String serviceCategory;
+
+    @Column(name = "patient_category")
+    private String patientCategory;
+
+    @Column(name = "gender")
+    private String gender;
+
+    @Column(name = "age")
+    private Integer age;
+
     // Getters and Setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
     public Patient getPatient() { return patient; }
     public void setPatient(Patient patient) { this.patient = patient; }
-    public ServiceCategory getServiceCategory() { return serviceCategory; }
-    public void setServiceCategory(ServiceCategory serviceCategory) { this.serviceCategory = serviceCategory; }
     public LocalDateTime getVisitDate() { return visitDate; }
     public void setVisitDate(LocalDateTime visitDate) { this.visitDate = visitDate; }
     public String getNotes() { return notes; }
     public void setNotes(String notes) { this.notes = notes; }
+
+    public String getHospitalId() { return hospitalId; }
+    public void setHospitalId(String hospitalId) { this.hospitalId = hospitalId; }
+
+    public String getServiceCategory() { return serviceCategory; }
+    public void setServiceCategory(String serviceCategory) { this.serviceCategory = serviceCategory; }
+
+    public String getPatientCategory() { return patientCategory; }
+    public void setPatientCategory(String patientCategory) { this.patientCategory = patientCategory; }
+
+    public String getGender() { return gender; }
+    public void setGender(String gender) { this.gender = gender; }
+
+    public Integer getAge() { return age; }
+    public void setAge(Integer age) { this.age = age; }
 }

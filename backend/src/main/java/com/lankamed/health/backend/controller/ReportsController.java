@@ -31,16 +31,38 @@ public class ReportsController {
         public String reportType;
         public Map<String, Object> criteria;
         public Map<String, Object> filters;
+
+        // Add new filter fields
+        private String hospitalId;
+        private String serviceCategory;
+        private String patientCategory;
+        private String gender;
+        private Integer minAge;
+        private Integer maxAge;
+
         public String getReportType() { return reportType; }
         public Map<String, Object> getCriteria() { return criteria; }
         public Map<String, Object> getFilters() { return filters; }
         public void setReportType(String reportType) { this.reportType = reportType; }
         public void setCriteria(Map<String, Object> criteria) { this.criteria = criteria; }
         public void setFilters(Map<String, Object> filters) { this.filters = filters; }
+
+        public String getHospitalId() { return hospitalId; }
+        public void setHospitalId(String hospitalId) { this.hospitalId = hospitalId; }
+        public String getServiceCategory() { return serviceCategory; }
+        public void setServiceCategory(String serviceCategory) { this.serviceCategory = serviceCategory; }
+        public String getPatientCategory() { return patientCategory; }
+        public void setPatientCategory(String patientCategory) { this.patientCategory = patientCategory; }
+        public String getGender() { return gender; }
+        public void setGender(String gender) { this.gender = gender; }
+        public Integer getMinAge() { return minAge; }
+        public void setMinAge(Integer minAge) { this.minAge = minAge; }
+        public Integer getMaxAge() { return maxAge; }
+        public void setMaxAge(Integer maxAge) { this.maxAge = maxAge; }
     }
 
     @PostMapping("/generate")
-    @PreAuthorize("hasAuthority('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ReportResponse> generateReport(@RequestBody ReportRequest request, Authentication authentication) {
         ReportResponse response = reportService.createReport(
             request.getReportType(),
@@ -62,7 +84,7 @@ public class ReportsController {
     }
 
     @PostMapping("/download")
-    @PreAuthorize("hasAuthority('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<byte[]> downloadReport(@RequestBody DownloadRequest request, Authentication authentication) {
         String html;
         if (request.html != null && !request.html.isBlank()) {

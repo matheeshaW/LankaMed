@@ -1,46 +1,101 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 const AdvancedFilters = ({ filters, onChange, onNext }) => {
-  // Simple placeholder for extensible filtering
+  const [showFilters, setShowFilters] = useState(false);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-6">
-      <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-2xl">
-        <div className="text-center mb-8">
-          <h3 className="text-3xl font-bold text-gray-800 mb-2">
-            Advanced Filters
-          </h3>
-          <p className="text-gray-500">Optional - Customize your report further</p>
-        </div>
-        
-        <div className="bg-gradient-to-br from-gray-50 to-gray-100 border-2 border-dashed border-gray-300 rounded-xl p-12 mb-8">
+      <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
+        {/* Step 1: Popup Message */}
+        {!showFilters ? (
           <div className="text-center">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-white rounded-full shadow-md mb-4">
-              <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
-              </svg>
-            </div>
-            <h4 className="text-lg font-semibold text-gray-700 mb-2">
-              No Additional Filters Available
-            </h4>
-            <p className="text-sm text-gray-500 max-w-md mx-auto">
-              Advanced filtering options will be available here in future updates. 
-              Click next to continue with your current selections.
+            <h3 className="text-2xl font-bold text-gray-800 mb-4">
+              Refine Your Report
+            </h3>
+            <p className="text-gray-500 mb-8">
+              Would you like to refine your report with filters?
             </p>
-          </div>
-        </div>
 
-        <div className="flex gap-4">
-          <button
-            onClick={onNext}
-            data-testid="next-button"
-            className="flex-1 bg-indigo-600 text-white font-semibold py-3 px-6 rounded-xl transition-all hover:bg-indigo-700 active:scale-95 shadow-lg flex items-center justify-center gap-2"
-          >
-            Continue
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-            </svg>
-          </button>
-        </div>
+            <div className="flex gap-4 justify-center">
+              <button
+                onClick={onNext}
+                className="bg-gray-300 text-gray-700 font-semibold py-2 px-6 rounded-xl hover:bg-gray-400 transition-all"
+              >
+                Skip
+              </button>
+              <button
+                onClick={() => setShowFilters(true)}
+                className="bg-indigo-600 text-white font-semibold py-2 px-6 rounded-xl hover:bg-indigo-700 transition-all"
+              >
+                Add Filters
+              </button>
+            </div>
+          </div>
+        ) : (
+          /* Step 2: Filter Inputs */
+          <div>
+            <h3 className="text-2xl font-bold text-gray-800 mb-6 text-center">
+              Add Report Filters
+            </h3>
+
+            <div className="space-y-5 mb-8">
+              {/* Age Range */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Age Range
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  <input
+                    type="number"
+                    placeholder="Min Age"
+                    value={filters.minAge || ''}
+                    onChange={(e) =>
+                      onChange({ ...filters, minAge: e.target.value })
+                    }
+                    className="w-full px-3 py-2 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
+                  />
+                  <input
+                    type="number"
+                    placeholder="Max Age"
+                    value={filters.maxAge || ''}
+                    onChange={(e) =>
+                      onChange({ ...filters, maxAge: e.target.value })
+                    }
+                    className="w-full px-3 py-2 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
+                  />
+                </div>
+              </div>
+
+              {/* Gender */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Gender
+                </label>
+                <select
+                  value={filters.gender || ''}
+                  onChange={(e) =>
+                    onChange({ ...filters, gender: e.target.value })
+                  }
+                  className="w-full px-3 py-2 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none bg-white"
+                >
+                  <option value="">All</option>
+                  <option value="MALE">Male</option>
+                  <option value="FEMALE">Female</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Apply Filters Button */}
+            <div className="flex gap-4 justify-center">
+              <button
+                onClick={onNext}
+                className="flex-1 bg-indigo-600 text-white font-semibold py-3 rounded-xl hover:bg-indigo-700 transition-all"
+              >
+                Apply Filters
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

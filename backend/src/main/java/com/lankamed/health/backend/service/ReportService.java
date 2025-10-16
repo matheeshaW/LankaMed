@@ -52,6 +52,16 @@ public class ReportService {
         User user = userRepository.findByEmail(email).orElse(null);
         audit.setUser(user);
 
+        // Populate audit filter fields from criteria
+        if (criteria != null) {
+            audit.setHospitalId((String) criteria.get("hospitalId"));
+            audit.setServiceCategory((String) criteria.get("serviceCategory"));
+            audit.setPatientCategory((String) criteria.get("patientCategory"));
+            audit.setGender((String) criteria.get("gender"));
+            audit.setMinAge((Integer) criteria.get("minAge"));
+            audit.setMaxAge((Integer) criteria.get("maxAge"));
+        }
+
         try {
             IReportDataProvider provider = providerMap.get(reportType);
             if (provider == null)
@@ -60,6 +70,7 @@ public class ReportService {
             Map<String, Object> data = provider.fetchData(criteria);
 
             Map<String, Object> meta = new HashMap<>();
+            meta.put("criteria", criteria);
             meta.put("filters", filters);
             meta.put("title", reportType + " Report");
 

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, Routes, Route, Navigate } from 'react-router-dom';
 import AdminUsers from './AdminUsers';
 import CategoryPage from './CategoryPage';
-import { getRole, getToken } from '../utils/auth';
+import { getRole } from '../utils/auth';
 import ReportSelector from '../components/ReportSelector';
 import CriteriaForm from '../components/CriteriaForm';
 import AdvancedFilters from '../components/AdvancedFilters';
@@ -52,8 +52,7 @@ export default function AdminDashboard() {
     setLoading(true);
     setError("");
     try {
-      const token = getToken();
-      const resp = await generateReport({ reportType, criteria, filters }, token);
+      const resp = await generateReport({ reportType, criteria, filters });
       setReport(resp);
       setStep(3);
     } catch (e) {
@@ -67,8 +66,7 @@ export default function AdminDashboard() {
     setLoading(true);
     setError("");
     try {
-      const token = getToken();
-      const resp = await downloadReport({ html: report.html }, token);
+      const resp = await downloadReport({ html: report.html });
       const blob = new Blob([resp], { type: 'application/pdf' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -150,13 +148,20 @@ export default function AdminDashboard() {
             </div>
 
             {/* Modal Content */}
-            <div className="p-6">
+            <div className="p-6 relative"> {/* add relative here for overlay positioning */}
               {error && (
-                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl mb-4 flex items-start gap-2">
+                <div className="sticky top-0 z-50 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl mb-4 flex items-start gap-2">
                   <svg className="w-5 h-5 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                   <span className="font-semibold">{error}</span>
+                </div>
+              )}
+
+              {loading && (
+                <div className="absolute inset-0 z-50 bg-white bg-opacity-75 flex flex-col items-center justify-center">
+                  <div className="animate-spin border-4 border-indigo-300 border-t-indigo-600 rounded-full w-12 h-12 mb-4"></div>
+                  <span className="font-semibold text-indigo-700">Generating report...</span>
                 </div>
               )}
 

@@ -21,6 +21,14 @@ CREATE TABLE visit (
     CONSTRAINT fk_visit_service_category FOREIGN KEY (service_category_id) REFERENCES service_category(id)
 );
 
+-- Add new columns for reporting enhancements
+ALTER TABLE visit
+    ADD COLUMN hospital_id VARCHAR(20),
+    ADD COLUMN service_category VARCHAR(50),
+    ADD COLUMN patient_category VARCHAR(50),
+    ADD COLUMN gender VARCHAR(10),
+    ADD COLUMN age INT;
+
 -- Demo seed for visit
 INSERT INTO visit (patient_id, service_category_id, visit_date, notes)
 SELECT p.id, s.id, NOW(), 'Demo visit for seed'

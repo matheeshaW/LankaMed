@@ -7,9 +7,14 @@ const ReportSelector = ({ reportType, onChange, onNext }) => {
         <h2 className="text-3xl font-bold text-gray-800 mb-8 text-center">
           Select Report Type
         </h2>
-        
+
         <div className="space-y-4 mb-8">
-          <label className="flex items-center p-4 border-2 border-gray-200 rounded-xl cursor-pointer transition-all hover:border-indigo-400 hover:bg-indigo-50 group">
+          {/* Patient Visit Report */}
+          <label className={`flex items-center p-4 border-2 rounded-xl cursor-pointer transition-all ${
+            reportType === 'PATIENT_VISIT'
+              ? 'border-indigo-500 bg-indigo-50'
+              : 'border-gray-200 hover:border-indigo-400 hover:bg-indigo-50'
+          }`}>
             <input
               type="radio"
               value="PATIENT_VISIT"
@@ -18,16 +23,21 @@ const ReportSelector = ({ reportType, onChange, onNext }) => {
               className="w-5 h-5 text-indigo-600 focus:ring-2 focus:ring-indigo-500 cursor-pointer"
             />
             <div className="ml-4 flex-1">
-              <span className="text-lg font-semibold text-gray-800 group-hover:text-indigo-600">
+              <span className="text-lg font-semibold text-gray-800">
                 Patient Visit Report
               </span>
               <p className="text-sm text-gray-500 mt-1">
-                Track patient appointments and visits
+                View details of patient visits and appointments.
               </p>
             </div>
           </label>
 
-          <label className="flex items-center p-4 border-2 border-gray-200 rounded-xl cursor-pointer transition-all hover:border-indigo-400 hover:bg-indigo-50 group">
+          {/* Service Utilization Report */}
+          <label className={`flex items-center p-4 border-2 rounded-xl cursor-pointer transition-all ${
+            reportType === 'SERVICE_UTILIZATION'
+              ? 'border-indigo-500 bg-indigo-50'
+              : 'border-gray-200 hover:border-indigo-400 hover:bg-indigo-50'
+          }`}>
             <input
               type="radio"
               value="SERVICE_UTILIZATION"
@@ -36,16 +46,17 @@ const ReportSelector = ({ reportType, onChange, onNext }) => {
               className="w-5 h-5 text-indigo-600 focus:ring-2 focus:ring-indigo-500 cursor-pointer"
             />
             <div className="ml-4 flex-1">
-              <span className="text-lg font-semibold text-gray-800 group-hover:text-indigo-600">
+              <span className="text-lg font-semibold text-gray-800">
                 Service Utilization Report
               </span>
               <p className="text-sm text-gray-500 mt-1">
-                Analyze service usage and trends
+                Analyze usage statistics for hospital services.
               </p>
             </div>
           </label>
         </div>
 
+        {/* Next Button */}
         <button
           onClick={onNext}
           disabled={!reportType}

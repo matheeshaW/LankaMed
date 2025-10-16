@@ -15,31 +15,38 @@ api.interceptors.request.use((config) => {
 /**
  * Generates a report from the server (admin-only).
  * @param {object} reportRequest { reportType, criteria, filters }
- * @param {string} token Optional: Bearer JWT
  * @returns {Promise<{html, meta}>}
  */
-export async function generateReport(reportRequest, token) {
-	const headers = token ? { Authorization: `Bearer ${token}` } : {};
-	const res = await api.post('/api/reports/generate', reportRequest, { headers });
-	return res.data;
+export async function generateReport(reportRequest) {
+	try {
+		const res = await api.post('/api/reports/generate', reportRequest);
+		return res.data;
+	} catch (err) {
+		if (err.response && err.response.status === 403) {
+			throw new Error('You are not authorized to generate reports. Please check your admin login or permissions.');
+		}
+		throw new Error(err.response?.data?.message || err.message || 'Failed to generate report');
+	}
 }
 
 /**
  * Downloads a generated report as PDF (admin-only).
  * @param {object} htmlOrMeta { html } or {reportType,...}
- * @param {string} token Optional: Bearer JWT
  * @returns {Promise<Blob>} PDF blob
  */
-export async function downloadReport(htmlOrMeta, token) {
-	const headers = {
-		'Accept': 'application/pdf',
-	};
-	if (token) headers['Authorization'] = `Bearer ${token}`;
-	const res = await api.post('/api/reports/download', htmlOrMeta, {
-		headers,
-		responseType: 'blob',
-	});
-	return res.data;
+export async function downloadReport(htmlOrMeta) {
+	try {
+		const res = await api.post('/api/reports/download', htmlOrMeta, {
+			headers: { 'Accept': 'application/pdf' },
+			responseType: 'blob',
+		});
+		return res.data;
+	} catch (err) {
+		if (err.response && err.response.status === 403) {
+			throw new Error('You are not authorized to download reports. Please check your admin login or permissions.');
+		}
+		throw new Error(err.response?.data?.message || err.message || 'Failed to download report');
+	}
 }
 
 export default api;
