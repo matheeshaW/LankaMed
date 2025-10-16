@@ -1,10 +1,10 @@
 package com.lankamed.health.backend.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.lankamed.health.backend.dto.PatientProfileDto;
-import com.lankamed.health.backend.dto.UpdatePatientProfileDto;
-import com.lankamed.health.backend.model.Patient;
-import com.lankamed.health.backend.service.PatientService;
+import com.lankamed.health.backend.dto.patient.PatientProfileDto;
+import com.lankamed.health.backend.dto.patient.UpdatePatientProfileDto;
+import com.lankamed.health.backend.model.patient.Patient;
+import com.lankamed.health.backend.service.patient.PatientService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -20,6 +20,7 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import com.lankamed.health.backend.controller.patient.PatientController;
 
 @WebMvcTest(PatientController.class)
 class PatientControllerTest {
