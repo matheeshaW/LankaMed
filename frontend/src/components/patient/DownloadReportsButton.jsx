@@ -18,7 +18,7 @@ import JsBarcode from 'jsbarcode';
  * - Dependency Inversion: uses `api` abstraction for HTTP
  */
 const endpoints = {
-  profile: '/api/patients/me',
+  profile: '/api/user-data/current',
   emergencyContacts: '/api/patients/me/emergency-contacts',
   conditions: '/api/patients/me/conditions',
   allergies: '/api/patients/me/allergies',
@@ -30,7 +30,10 @@ const endpoints = {
 
 const fetchAll = async () => {
   const requests = Object.entries(endpoints).map(([key, url]) => (
-    api.get(url).then(r => ({ key, data: r.data })).catch(() => ({ key, data: null }))
+    api.get(url).then(r => ({ key, data: r.data })).catch(err => {
+      console.error(`Error fetching ${key}:`, err);
+      return { key, data: null };
+    })
   ));
   const results = await Promise.all(requests);
   return results.reduce((acc, r) => ({ ...acc, [r.key]: r.data }), {});
@@ -100,9 +103,9 @@ const DownloadReportsButton = () => {
       doc.text('Patient Health Report', pageWidth / 2, 32, { align: 'center' });
 
       // Patient summary card (right aligned small box)
-      const p = data.profile || {};
+      const p = data.profile?.data || data.profile || {};
       // Generate barcode SVG for patient ID and insert on right side of header
-      const patientId = p.patientId || '';
+      const patientId = p.patientId || p.userId || '';
       if (patientId) {
         try {
           const svgNS = 'http://www.w3.org/2000/svg';
@@ -318,7 +321,7 @@ const DownloadReportsButton = () => {
         doc.text(`Page ${i} / ${pageCount}`, pageWidth - marginLeft, pageHeight - 30, { align: 'right' });
       }
 
-      doc.save(`patient-report-${p.patientId || 'unknown'}.pdf`);
+      doc.save(`patient-report-${p.patientId || p.userId || 'unknown'}.pdf`);
     } catch (e) {
       console.error('DownloadReportsButton error', e);
       alert('Failed to generate report. Please try again.');
