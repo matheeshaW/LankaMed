@@ -65,7 +65,7 @@ class PatientVisitDataProviderTest {
         mockVisits = List.of(visit1, visit2, visit3);
     }
 
-    // Positive Test Cases
+    // Positive Test Cases(Successful data fetching)
     @Test
     void fetchData_WithAllFilters_ReturnsCorrectData() {
         // Given
@@ -193,6 +193,7 @@ class PatientVisitDataProviderTest {
         assertEquals("N/A - N/A", result.get("reportPeriod"));
     }
 
+    //Edge Cases(Null criteria handling)
     @Test
     void fetchData_NullCriteria_ThrowsException() {
         // Given
@@ -334,7 +335,7 @@ class PatientVisitDataProviderTest {
         assertEquals(1L, result.get("uniquePatients")); // Only 1 unique patient
     }
 
-    // Error Cases
+    // Error Cases(Repository exception handling)
     @Test
     void fetchData_RepositoryThrowsException_PropagatesException() {
         // Given

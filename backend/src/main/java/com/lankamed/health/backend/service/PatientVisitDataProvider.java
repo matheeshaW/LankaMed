@@ -14,6 +14,7 @@ import com.lankamed.health.backend.service.interfaces.IReportDataProvider;
 
 import jakarta.persistence.criteria.Predicate;
 
+//Comprehensive Documentation
 /**
  * Provides filtered data for report generation based on user-selected criteria.
  * <p>
@@ -29,6 +30,10 @@ import jakarta.persistence.criteria.Predicate;
  *   <li>Meant for use in a report generation strategy/factory pattern setup as part of extensible report service.</li>
  * </ul>
  */
+
+ //Open/Closed Principle
+ //Liskov Substitution Principle
+
 @Service("PATIENT_VISIT")
 @Transactional
 public class PatientVisitDataProvider implements IReportDataProvider {

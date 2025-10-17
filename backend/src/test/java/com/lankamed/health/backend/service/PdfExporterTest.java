@@ -14,7 +14,7 @@ class PdfExporterTest {
     @InjectMocks
     private PdfExporter pdfExporter;
 
-    // Positive Test Cases
+    // Positive Test Cases(Valid HTML to PDF conversion)
     @Test
     void export_WithValidHtml_ReturnsPdfBytes() {
         // Given
@@ -242,7 +242,7 @@ class PdfExporterTest {
         assertTrue(new String(result, 0, Math.min(4, result.length)).startsWith("%PDF"));
     }
 
-    // Edge Cases
+    // Edge Cases(Empty HTML handling)
     @Test
     void export_WithEmptyHtml_ReturnsPdf() {
         // Given
@@ -374,7 +374,7 @@ class PdfExporterTest {
         assertTrue(new String(result, 0, Math.min(4, result.length)).startsWith("%PDF"));
     }
 
-    // Error Cases
+    // Error Cases(Null HTML handling)
     @Test
     void export_WithNullHtml_ThrowsException() {
         // When & Then

@@ -25,7 +25,7 @@ describe('ReportViewer', () => {
     jest.clearAllMocks();
   });
 
-  // Positive Test Cases
+  // Positive Test Cases(Successful report content rendering)
   test('renders report content when HTML is provided', () => {
     render(
       <ReportViewer 
@@ -153,7 +153,7 @@ describe('ReportViewer', () => {
     // The actual date will be dynamic, so we just check that the text is present
   });
 
-  // Negative Test Cases
+  // Negative Test Cases(Disabled download button)
   test('disables download button when no HTML is provided', () => {
     render(
       <ReportViewer 
@@ -229,7 +229,7 @@ describe('ReportViewer', () => {
     expect(screen.queryByText('Service:')).not.toBeInTheDocument();
   });
 
-  // Edge Cases
+  // Edge Cases(Empty HTML string handling)
   test('handles empty HTML string correctly', () => {
     render(
       <ReportViewer 
@@ -642,6 +642,8 @@ describe('ReportViewer', () => {
     
     expect(DOMPurify.sanitize).toHaveBeenCalledWith(mockHtml);
   });
+
+  //Error Cases(DOMPurify sanitization error handling)
 
   test('handles DOMPurify sanitization errors gracefully', () => {
     const DOMPurify = require('dompurify');

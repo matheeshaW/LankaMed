@@ -16,7 +16,7 @@ class HtmlReportGeneratorTest {
     @InjectMocks
     private HtmlReportGenerator reportGenerator;
 
-    // Positive Test Cases
+    // Positive Test Cases(Successful HTML report generation)
     @Test
     void generate_WithCompleteData_ReturnsValidHtml() {
         // Given
@@ -130,7 +130,7 @@ class HtmlReportGeneratorTest {
         assertTrue(result.contains("25 - 45"));
     }
 
-    // Edge Cases
+    //Error Cases(Null meta handling)
     @Test
     void generate_WithNullMeta_ThrowsException() {
         // Given
@@ -183,6 +183,7 @@ class HtmlReportGeneratorTest {
         assertTrue(result.contains("100"));
     }
 
+    //Edge Cases(Null criteria handling)
     @Test
     void generate_WithNullCriteria_HandlesGracefully() {
         // Given

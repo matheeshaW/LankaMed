@@ -11,7 +11,7 @@ describe('ReportSelector', () => {
     jest.clearAllMocks();
   });
 
-  // Positive Test Cases
+  // Positive Test Cases(Successful report type options rendering)
   test('renders report type options correctly', () => {
     render(<ReportSelector onChange={mockOnChange} onNext={mockOnNext} />);
     
@@ -89,7 +89,7 @@ describe('ReportSelector', () => {
     expect(screen.getByText('Choose the type of report you want to generate')).toBeInTheDocument();
   });
 
-  // Negative Test Cases
+  // Negative Test Cases(Invalid report type handling)
   test('disables continue button when no report type is selected', () => {
     render(<ReportSelector onChange={mockOnChange} onNext={mockOnNext} />);
     
@@ -109,7 +109,7 @@ describe('ReportSelector', () => {
     expect(screen.queryByText('Selected')).not.toBeInTheDocument();
   });
 
-  // Edge Cases
+  // Edge Cases(Multiple report type selections handling)
   test('handles multiple report type selections correctly', () => {
     render(<ReportSelector onChange={mockOnChange} onNext={mockOnNext} />);
     
@@ -136,6 +136,7 @@ describe('ReportSelector', () => {
     expect(mockOnChange).toHaveBeenCalledWith('PATIENT_VISIT');
   });
 
+  //Edge Cases(Undefined reportType prop handling)
   test('handles undefined reportType prop gracefully', () => {
     render(
       <ReportSelector 

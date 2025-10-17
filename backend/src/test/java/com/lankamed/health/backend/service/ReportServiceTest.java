@@ -77,7 +77,7 @@ class ReportServiceTest {
         );
     }
 
-    // Positive Test Cases
+    // Positive Test Cases(Successful report creation)
     @Test
     void createReport_Success() {
         // Given
@@ -148,7 +148,7 @@ class ReportServiceTest {
         ));
     }
 
-    // Negative Test Cases
+    // Negative Test Cases(Unknown report type handling)
     @Test
     void createReport_UnknownReportType_ThrowsException() {
         // Given
@@ -185,7 +185,7 @@ class ReportServiceTest {
         verify(auditRepository).save(argThat(audit -> audit.getUser() == null));
     }
 
-    // Edge Cases
+    // Edge Cases(Null criteria handling)
     @Test
     void createReport_NullCriteria_HandlesGracefully() {
         // Given
@@ -231,7 +231,7 @@ class ReportServiceTest {
         ));
     }
 
-    // Error Cases
+    // Error Cases(Data provider exception handling)
     @Test
     void createReport_DataProviderThrowsException_AuditsFailure() {
         // Given

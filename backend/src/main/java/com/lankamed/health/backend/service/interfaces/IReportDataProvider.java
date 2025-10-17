@@ -9,6 +9,9 @@ import java.util.Map;
  *
  * Example: PatientVisitDataProvider, ServiceUtilizationDataProvider
  */
+
+ //open/closed principle
+ //Interface Segregation Principle
 public interface IReportDataProvider {
     /**
      * Fetches report data based on the given criteria map.

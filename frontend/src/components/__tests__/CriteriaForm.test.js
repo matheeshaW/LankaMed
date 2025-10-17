@@ -18,7 +18,7 @@ describe('CriteriaForm', () => {
     jest.clearAllMocks();
   });
 
-  // Positive Test Cases
+  // Positive Test Cases(Successful form rendering)
   test('renders all form fields correctly', () => {
     render(
       <CriteriaForm 
@@ -237,7 +237,7 @@ describe('CriteriaForm', () => {
     expect(mockOnNext).toHaveBeenCalled();
   });
 
-  // Negative Test Cases
+  // Negative Test Cases(Invalid criteria handling)
   test('disables next button when required fields are missing', () => {
     render(
       <CriteriaForm 
@@ -409,6 +409,7 @@ describe('CriteriaForm', () => {
     expect(nextButton).toBeDisabled();
   });
 
+  //Edge Cases(Null criteria handling)
   test('handles null values in criteria gracefully', () => {
     const criteriaWithNulls = {
       from: null,
@@ -618,6 +619,7 @@ describe('CriteriaForm', () => {
   });
 
   // Function Call Tests
+  //Error Cases(Disabled continue button handling)
   test('does not call onNext when continue button is disabled', () => {
     render(
       <CriteriaForm 

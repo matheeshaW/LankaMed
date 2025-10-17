@@ -47,6 +47,7 @@ describe('AdvancedFilters', () => {
   });
 
   // State Toggle Tests
+  //Positive Test Cases(Successful filter form display)
   test('shows filter form when Add Filters button is clicked', () => {
     render(
       <AdvancedFilters 
@@ -362,6 +363,7 @@ describe('AdvancedFilters', () => {
     expect(screen.getByDisplayValue('All Genders')).toBeInTheDocument();
   });
 
+  //Edge Cases(Invalid age input handling)
   test('handles age input values correctly', () => {
     render(
       <AdvancedFilters 
@@ -384,6 +386,7 @@ describe('AdvancedFilters', () => {
     });
   });
 
+  //Error Cases(Negative age input handling)
   test('handles negative age values', () => {
     render(
       <AdvancedFilters 

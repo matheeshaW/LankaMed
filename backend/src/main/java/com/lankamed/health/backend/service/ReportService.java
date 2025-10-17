@@ -15,6 +15,7 @@ import com.lankamed.health.backend.service.interfaces.IPdfExporter;
 import com.lankamed.health.backend.service.interfaces.IReportDataProvider;
 import com.lankamed.health.backend.service.interfaces.IReportGenerator;
 
+//Single Responsibility Principle
 @Service
 public class ReportService {
 
@@ -24,6 +25,7 @@ public class ReportService {
     private final ReportAuditRepository auditRepository;
     private final UserRepository userRepository;
 
+    //Dependency Inversion Principle
     public ReportService(Map<String, IReportDataProvider> providerMap,
                          IReportGenerator reportGenerator,
                          IPdfExporter pdfExporter,

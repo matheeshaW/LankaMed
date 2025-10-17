@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.lankamed.health.backend.service.ReportService;
 import com.lankamed.health.backend.service.ReportService.ReportResponse;
 
+//single responsibility principle(HTTP Request Handling Only)
 @RestController
 @RequestMapping("/api/reports")
 public class ReportsController {
@@ -24,9 +25,8 @@ public class ReportsController {
         this.reportService = reportService;
     }
 
-    /**
-     * Request DTO for generating a report.
-     */
+
+     //clean code( Meaningful Names and Clear Intent)
     public static class ReportRequest {
         public String reportType;
         public Map<String, Object> criteria;
@@ -61,6 +61,7 @@ public class ReportsController {
         public void setMaxAge(Integer maxAge) { this.maxAge = maxAge; }
     }
 
+    //Single Responsibility Principle(Only handles HTTP requests)
     @PostMapping("/generate")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ReportResponse> generateReport(@RequestBody ReportRequest request, Authentication authentication) {
@@ -73,9 +74,7 @@ public class ReportsController {
         return ResponseEntity.ok(response);
     }
 
-    /**
-     * Request DTO for downloading as PDF (can reuse criteria or supply html directly)
-     */
+    
     public static class DownloadRequest {
         public String html;
         public String reportType;

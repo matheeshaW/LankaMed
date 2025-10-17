@@ -6,6 +6,7 @@ import java.util.Map;
  * Interface for transforming report data and metadata into a final HTML report output.
  * Adheres to SOLID by separating report data logic from presentation generation logic.
  */
+//Interface Segregation Principle
 public interface IReportGenerator {
     /**
      * Generates an HTML (or other format) report from structured data.

@@ -47,6 +47,7 @@ class ReportsControllerUnitTest {
     @DisplayName("Report Generation Tests")
     class ReportGenerationTests {
 
+        //Positive Test Cases(Successful report generation)
         @Test
         @DisplayName("Should generate report successfully with valid request")
         void generateReport_Success_ReturnsReportResponse() {
@@ -202,6 +203,7 @@ class ReportsControllerUnitTest {
             });
         }
 
+        //Error Cases(Service exception handling)
         @Test
         @DisplayName("Should handle service exception during report generation")
         void generateReport_ServiceThrowsException_ThrowsRuntimeException() {
@@ -313,6 +315,7 @@ class ReportsControllerUnitTest {
             verify(reportService).exportReportToPdf("<html>Direct HTML</html>");
         }
 
+        //Negative Test Cases(Bad request handling)
         @Test
         @DisplayName("Should return bad request when no HTML or report type provided")
         void downloadReport_NoHtmlOrReportType_ReturnsBadRequest() {
@@ -396,6 +399,7 @@ class ReportsControllerUnitTest {
     @DisplayName("Edge Cases and Boundary Tests")
     class EdgeCasesAndBoundaryTests {
 
+        //Edge Cases(Large data handling)
         @Test
         @DisplayName("Should handle very large criteria map")
         void generateReport_WithVeryLargeCriteria_HandlesGracefully() {
