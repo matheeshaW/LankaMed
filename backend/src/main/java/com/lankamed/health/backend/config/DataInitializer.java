@@ -216,24 +216,24 @@ public class DataInitializer implements CommandLineRunner {
     private void createSampleDoctors() {
         try {
             System.out.println("DataInitializer: Creating sample doctors...");
-            
+
             // Get existing hospitals and categories
             List<Hospital> hospitals = hospitalRepository.findAll();
             List<ServiceCategory> categories = serviceCategoryRepository.findAll();
-            
+
             if (hospitals.isEmpty() || categories.isEmpty()) {
                 System.out.println("DataInitializer: Cannot create doctors - missing hospitals or categories");
                 return;
             }
 
-            // Create multiple doctors
-            createDoctor("Dr. Sarah", "Johnson", "sarah.johnson@lankamed.com", "Cardiologist", hospitals.get(0), categories.get(0));
-            createDoctor("Dr. Michael", "Chen", "michael.chen@lankamed.com", "Dermatologist", hospitals.get(0), categories.get(1));
-            createDoctor("Dr. Priya", "Fernando", "priya.fernando@lankamed.com", "Pediatrician", hospitals.get(1), categories.get(2));
-            createDoctor("Dr. David", "Rodrigo", "david.rodrigo@lankamed.com", "Neurologist", hospitals.get(1), categories.get(3));
-            createDoctor("Dr. James", "Wilson", "james.wilson@lankamed.com", "Orthopedic Surgeon", hospitals.get(2), categories.get(4));
+            // Create multiple doctors with different consultation fees
+            createDoctor("Dr. Sarah", "Johnson", "sarah.johnson@lankamed.com", "Cardiologist", hospitals.get(0), categories.get(0)); // 2500
+            createDoctor("Dr. Michael", "Chen", "michael.chen@lankamed.com", "Dermatologist", hospitals.get(0), categories.get(1)); // 1800
+            createDoctor("Dr. Priya", "Fernando", "priya.fernando@lankamed.com", "Pediatrician", hospitals.get(1), categories.get(2)); // 2000
+            createDoctor("Dr. David", "Rodrigo", "david.rodrigo@lankamed.com", "Neurologist", hospitals.get(1), categories.get(3)); // 3000
+            createDoctor("Dr. James", "Wilson", "james.wilson@lankamed.com", "Orthopedic Surgeon", hospitals.get(2), categories.get(4)); // 3500
 
-            System.out.println("DataInitializer: Created 5 sample doctors");
+            System.out.println("DataInitializer: Created 5 sample doctors with different consultation fees");
         } catch (Exception e) {
             System.err.println("DataInitializer: Error creating sample doctors: " + e.getMessage());
             e.printStackTrace();
@@ -243,14 +243,14 @@ public class DataInitializer implements CommandLineRunner {
     private void createDoctor(String firstName, String lastName, String email, String specialization, Hospital hospital, ServiceCategory category) {
         try {
             System.out.println("DataInitializer: Creating doctor: " + firstName + " " + lastName);
-            
+
             // Check if doctor already exists
             Optional<User> existingUser = userRepository.findByEmail(email);
             if (existingUser.isPresent()) {
                 System.out.println("DataInitializer: Doctor " + firstName + " " + lastName + " already exists, skipping...");
                 return;
             }
-            
+
             User doctor = User.builder()
                     .firstName(firstName)
                     .lastName(lastName)
@@ -262,19 +262,41 @@ public class DataInitializer implements CommandLineRunner {
             doctor = userRepository.save(doctor);
             System.out.println("DataInitializer: Saved user with ID: " + doctor.getUserId());
 
+            // Set consultation fee based on specialization
+            Double consultationFee = getConsultationFeeForSpecialization(specialization);
+
             StaffDetails doctorDetails = StaffDetails.builder()
                     .staffId(doctor.getUserId())
                     .specialization(specialization)
                     .hospital(hospital)
                     .serviceCategory(category)
+                    .consultationFee(consultationFee)
                     .user(doctor)
                     .build();
             staffDetailsRepository.save(doctorDetails);
-            System.out.println("DataInitializer: Saved staff details for: " + firstName + " " + lastName);
-            
+            System.out.println("DataInitializer: Saved staff details for: " + firstName + " " + lastName + " with consultation fee: " + consultationFee);
+
         } catch (Exception e) {
             System.err.println("DataInitializer: Error creating doctor " + firstName + " " + lastName + ": " + e.getMessage());
             e.printStackTrace();
+        }
+    }
+
+    private Double getConsultationFeeForSpecialization(String specialization) {
+        // Set different consultation fees based on specialization
+        switch (specialization.toLowerCase()) {
+            case "cardiologist":
+                return 2500.00;
+            case "dermatologist":
+                return 1800.00;
+            case "pediatrician":
+                return 2000.00;
+            case "neurologist":
+                return 3000.00;
+            case "orthopedic surgeon":
+                return 3500.00;
+            default:
+                return 1500.00; // Default consultation fee
         }
     }
 
@@ -351,8 +373,14 @@ public class DataInitializer implements CommandLineRunner {
         }
     }
 
-    private void createAppointment(Patient patient, StaffDetails doctor, Hospital hospital, 
+    private void createAppointment(Patient patient, StaffDetails doctor, Hospital hospital,
                                  ServiceCategory category, LocalDateTime dateTime, Appointment.Status status) {
+        // Calculate payment amount based on doctor's consultation fee
+        Double paymentAmount = doctor.getConsultationFee();
+        if (paymentAmount == null || paymentAmount <= 0) {
+            paymentAmount = 1500.00; // Default consultation fee
+        }
+
         Appointment appointment = Appointment.builder()
                 .patient(patient)
                 .doctor(doctor)
@@ -360,10 +388,11 @@ public class DataInitializer implements CommandLineRunner {
                 .serviceCategory(category)
                 .appointmentDateTime(dateTime)
                 .status(status)
+                .paymentAmount(paymentAmount)
                 .build();
         appointmentRepository.save(appointment);
-        
-        System.out.println("DataInitializer: Created appointment - " + patient.getUser().getFirstName() + 
-            " with " + doctor.getUser().getFirstName() + " on " + dateTime.toLocalDate() + " (" + status + ")");
+
+        System.out.println("DataInitializer: Created appointment - " + patient.getUser().getFirstName() +
+            " with " + doctor.getUser().getFirstName() + " on " + dateTime.toLocalDate() + " (" + status + ") - Amount: " + paymentAmount);
     }
 }

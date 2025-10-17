@@ -183,6 +183,7 @@ public class PaymentServiceImpl implements PaymentService {
                                 try {
                                     Appointment appointment = p.getAppointment();
                                     System.out.println("PaymentServiceImpl: Processing appointment ID: " + appointment.getAppointmentId());
+                                    System.out.println("PaymentServiceImpl: Appointment payment amount: " + appointment.getPaymentAmount());
 
                                     // Set appointment date and time
                                     if (appointment.getAppointmentDateTime() != null) {
@@ -217,6 +218,12 @@ public class PaymentServiceImpl implements PaymentService {
                                                            appointment.getDoctor().getUser().getFirstName() + " " +
                                                            appointment.getDoctor().getUser().getLastName();
                                         dto.setAppointmentDescription(description);
+                                    }
+
+                                    // Ensure the payment amount from appointment is properly set in DTO
+                                    if (appointment.getPaymentAmount() != null) {
+                                        dto.setAmount(appointment.getPaymentAmount());
+                                        System.out.println("PaymentServiceImpl: Updated DTO amount from appointment: " + appointment.getPaymentAmount());
                                     }
                                 } catch (Exception e) {
                                     // Log the error but don't fail the entire operation

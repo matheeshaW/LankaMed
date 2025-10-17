@@ -192,27 +192,30 @@ public class AppointmentService {
             payment.setPatient(appointment.getPatient());
             payment.setAppointment(appointment);
 
-            // Use doctor's consultation fee or fallback to default
-            Double consultationFee = appointment.getDoctor().getConsultationFee();
-            if (consultationFee == null || consultationFee <= 0) {
-                consultationFee = 1500.00; // Default consultation fee
-                logger.warn("Doctor consultation fee not set for doctor ID: {}, using default: {}",
-                           appointment.getDoctor().getStaffId(), consultationFee);
+            // Use the appointment's existing payment amount instead of recalculating
+            Double paymentAmount = appointment.getPaymentAmount();
+            if (paymentAmount == null || paymentAmount <= 0) {
+                // Fallback to doctor's consultation fee if appointment payment amount is not set
+                paymentAmount = appointment.getDoctor().getConsultationFee();
+                if (paymentAmount == null || paymentAmount <= 0) {
+                    paymentAmount = 1500.00; // Default consultation fee
+                }
+                // Update appointment with the calculated amount for consistency
+                appointment.setPaymentAmount(paymentAmount);
+                appointmentRepository.save(appointment);
+                logger.warn("Appointment payment amount not set for appointment ID: {}, calculated from doctor fee: {}",
+                           appointment.getAppointmentId(), paymentAmount);
             }
 
-            payment.setAmount(consultationFee);
+            payment.setAmount(paymentAmount);
             payment.setPaymentType(PaymentType.Card); // Default payment type
             payment.setStatus(PaymentStatus.Pending);
             payment.setTransactionId("APPT-" + appointment.getAppointmentId() + "-" + UUID.randomUUID().toString().substring(0, 8));
             payment.setPaymentTimestamp(LocalDateTime.now());
 
-            // Also update the appointment's payment amount for consistency
-            appointment.setPaymentAmount(consultationFee);
-            appointmentRepository.save(appointment);
-
             paymentRepository.save(payment);
             logger.info("Successfully created pending payment for appointment ID: {} with amount: {}",
-                       appointment.getAppointmentId(), consultationFee);
+                       appointment.getAppointmentId(), paymentAmount);
 
         } catch (Exception e) {
             logger.error("Error creating pending payment for confirmed appointment ID: " + appointment.getAppointmentId(), e);
