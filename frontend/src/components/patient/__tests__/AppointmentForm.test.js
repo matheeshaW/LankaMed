@@ -1,5 +1,5 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import AppointmentForm from '../../patient/AppointmentForm';
+import AppointmentForm from '../../appointment/AppointmentForm';
 
 jest.mock('../../../services/api', () => ({
   __esModule: true,

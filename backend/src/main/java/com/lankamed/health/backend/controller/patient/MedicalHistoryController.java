@@ -80,6 +80,7 @@ public class MedicalHistoryController {
         List<PrescriptionDto> prescriptions = medicalHistoryService.getPrescriptions();
         return ResponseEntity.ok(prescriptions);
     }
+
 }
 
 

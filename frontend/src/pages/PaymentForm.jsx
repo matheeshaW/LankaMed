@@ -18,6 +18,7 @@ const PaymentForm = ({ paymentData, setPaymentData, onBack, onSubmit }) => {
             amount: billInfo.amount,
             description:
               billInfo.description || `Payment for ${billInfo.billId}`,
+            appointmentId: billInfo.appointmentId,
           }));
 
           // Clear the stored data after using it

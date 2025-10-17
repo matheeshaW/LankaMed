@@ -12,12 +12,15 @@ import com.lankamed.health.backend.repository.patient.PrescriptionRepository;
 import com.lankamed.health.backend.model.patient.Patient;
 import com.lankamed.health.backend.model.patient.Allergy;
 import com.lankamed.health.backend.model.patient.MedicalCondition;
+import com.lankamed.health.backend.model.patient.Prescription;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -152,13 +155,28 @@ public class MedicalHistoryService {
 
     public List<PrescriptionDto> getPrescriptions() {
         String email = getCurrentUserEmail();
-        return prescriptionRepository.findByPatientUserEmail(email)
-                .stream()
-                .map(PrescriptionDto::fromPrescription)
+        
+        Patient patient = patientRepository.findByUserEmail(email).orElse(null);
+        if (patient == null) {
+            return new ArrayList<>();
+        }
+        
+        List<Prescription> prescriptionEntities = prescriptionRepository.findByPatientPatientId(patient.getPatientId());
+        
+        return prescriptionEntities.stream()
+                .map(prescription -> {
+                    try {
+                        return PrescriptionDto.fromPrescription(prescription);
+                    } catch (Exception e) {
+                        return null;
+                    }
+                })
+                .filter(Objects::nonNull)
                 .collect(Collectors.toList());
     }
 
-    private String getCurrentUserEmail() {
+
+    public String getCurrentUserEmail() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         return authentication.getName();
     }

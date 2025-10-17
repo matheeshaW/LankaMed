@@ -24,14 +24,38 @@ const MedicalHistoryCard = () => {
     const fetchAllData = async () => {
         setLoading(true);
         try {
-            const [conditionsRes, allergiesRes, prescriptionsRes] = await Promise.all([
-                api.get('/api/patients/me/conditions'),
-                api.get('/api/patients/me/allergies'),
-                api.get('/api/patients/me/prescriptions')
+            // Fetch each endpoint individually to handle failures gracefully
+            const fetchConditions = api.get('/api/patients/me/conditions')
+                .then(res => res.data)
+                .catch(err => {
+                    console.error('Error fetching conditions:', err);
+                    return [];
+                });
+            
+            const fetchAllergies = api.get('/api/patients/me/allergies')
+                .then(res => res.data)
+                .catch(err => {
+                    console.error('Error fetching allergies:', err);
+                    return [];
+                });
+            
+            const fetchPrescriptions = api.get('/api/patients/me/prescriptions')
+                .then(res => res.data)
+                .catch(err => {
+                    console.error('Error fetching prescriptions:', err);
+                    return [];
+                });
+            
+            const [conditions, allergies, prescriptions] = await Promise.all([
+                fetchConditions,
+                fetchAllergies,
+                fetchPrescriptions
             ]);
-            setConditions(conditionsRes.data);
-            setAllergies(allergiesRes.data);
-            setPrescriptions(prescriptionsRes.data);
+            
+            
+            setConditions(conditions);
+            setAllergies(allergies);
+            setPrescriptions(prescriptions);
         } catch (error) {
             console.error('Error fetching medical history:', error);
         } finally {
@@ -180,6 +204,7 @@ const MedicalHistoryCard = () => {
                         </button>
                     </div>
                 </div>
+                
                 
                 {/* Tabs */}
                 <div className="flex space-x-4 mb-6">

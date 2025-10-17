@@ -11,4 +11,7 @@ import com.lankamed.health.backend.model.PaymentStatus;
 @Repository
 public interface PaymentRepository extends JpaRepository<Payment, Long> {
     List<Payment> findByPatient_PatientIdAndStatus(Long patientId, PaymentStatus status);
+
+    // Alternative method with different naming
+    List<Payment> findByPatientPatientIdAndStatus(Long patientId, PaymentStatus status);
 }

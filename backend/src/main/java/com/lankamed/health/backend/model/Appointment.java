@@ -57,6 +57,9 @@ public class Appointment {
     @Builder.Default
     private boolean priority = false;
 
+    @Column(name = "payment_amount")
+    private Double paymentAmount;
+
     @PrePersist
     public void prePersist() {
         if (createdAt == null) {

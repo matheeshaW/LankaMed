@@ -30,6 +30,9 @@ public class StaffDetails {
     @Size(max = 100)
     private String specialization;
 
+    @Column(name = "consultation_fee")
+    private Double consultationFee;
+
     @OneToOne(fetch = FetchType.LAZY)
     @MapsId
     @JoinColumn(name = "staff_id")

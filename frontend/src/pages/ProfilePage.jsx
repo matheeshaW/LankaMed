@@ -5,20 +5,19 @@ import { getRole } from '../utils/auth';
 export default function ProfilePage() {
 	const [profile, setProfile] = useState(null);
 	const [fullName, setFullName] = useState('');
-	const [phone, setPhone] = useState('');
 	const [newPassword, setNewPassword] = useState('');
 	const [message, setMessage] = useState('');
-	const [errors, setErrors] = useState({ fullName: '', phone: '', newPassword: '' });
+	const [errors, setErrors] = useState({ fullName: '', newPassword: '' });
 
 	useEffect(() => {
 		const fetchProfile = async () => {
 			try {
 				if (getRole() === 'PATIENT') {
-					// Patient endpoint has separate fields; reuse it so PatientDashboard remains unchanged
-					const res = await api.get('/api/patients/me');
-					setProfile(res.data);
-					setFullName(((res.data.firstName || '') + ' ' + (res.data.lastName || '')).trim());
-					setPhone(res.data.contactNumber || '');
+					// Use the same endpoint as PersonalInformationCard to get real user data
+					const res = await api.get('/api/user-data/current');
+					const userData = res.data.data || res.data;
+					setProfile(userData);
+					setFullName(((userData.firstName || '') + ' ' + (userData.lastName || '')).trim());
 				} else {
 					const res = await api.get('/api/users/me');
 					setProfile(res.data);
@@ -36,15 +35,11 @@ export default function ProfilePage() {
 	}, []);
 
 	const validateProfile = () => {
-		const next = { fullName: '', phone: '', newPassword: '' };
+		const next = { fullName: '', newPassword: '' };
 		if (!fullName.trim()) next.fullName = 'Full name is required';
 		else if (fullName.trim().length < 2) next.fullName = 'Full name must be at least 2 characters';
-		if (getRole() === 'PATIENT' && phone) {
-			const re = /^[0-9+\-()\s]{7,20}$/;
-			if (!re.test(phone)) next.phone = 'Enter a valid phone number';
-		}
 		setErrors(next);
-		return !next.fullName && (!next.phone || getRole() !== 'PATIENT');
+		return !next.fullName;
 	};
 
 	const validatePassword = () => {
@@ -58,7 +53,7 @@ export default function ProfilePage() {
 		e.preventDefault();
 		if (!validateProfile()) return;
 		if (!window.confirm('Save profile changes?')) return;
-		await api.put('/api/users/me', { fullName, phone });
+		await api.put('/api/users/me', { fullName });
 		setMessage('Profile updated');
 	};
 
@@ -124,19 +119,6 @@ export default function ProfilePage() {
 											readOnly 
 										/>
 									</div>
-									{getRole() === 'PATIENT' && (
-									<div>
-										<label className="block text-sm font-medium text-gray-700 mb-2">Phone</label>
-										<input 
-											className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ${
-												errors.phone ? 'border-red-500 bg-red-50' : 'border-gray-300'
-											}`} 
-											value={phone} 
-											onChange={(e)=>setPhone(e.target.value)} 
-										/>
-										{errors.phone && <div className="text-red-600 text-sm mt-1">{errors.phone}</div>}
-									</div>
-									)}
 									<button className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-200 hover:scale-105 hover:shadow-lg">
 										💾 Update Profile
 									</button>

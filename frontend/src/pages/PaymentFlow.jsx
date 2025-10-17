@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import PaymentForm from "./PaymentForm";
 import PaymentProcessing from "./PaymentProcessing";
@@ -61,6 +61,33 @@ const PaymentFlow = () => {
     },
   ];
 
+  // Handle pending bill data from PatientDashboard
+  useEffect(() => {
+    const pendingBillData = localStorage.getItem("pendingBillData");
+    if (pendingBillData) {
+      try {
+        const billInfo = JSON.parse(pendingBillData);
+        if (billInfo.fromPendingBills) {
+          console.log("PaymentFlow: Found pending bill data:", billInfo);
+
+          // Pre-populate form with bill information
+          setPaymentData((prevData) => ({
+            ...prevData,
+            amount: billInfo.amount,
+            description:
+              billInfo.description || `Payment for ${billInfo.billId}`,
+            appointmentId: billInfo.appointmentId,
+          }));
+
+          // Clear the stored data after using it
+          localStorage.removeItem("pendingBillData");
+        }
+      } catch (error) {
+        console.error("PaymentFlow: Error parsing pending bill data:", error);
+      }
+    }
+  }, []);
+
   const handleHospitalTypeSelect = (hospitalType) => {
     setPaymentData({ ...paymentData, hospitalType });
     setCurrentStep(2);
@@ -113,6 +140,7 @@ const PaymentFlow = () => {
           <HospitalTypeSelection
             hospitalTypes={hospitalTypes}
             onSelect={handleHospitalTypeSelect}
+            onBack={handleBack}
           />
         );
       case 2:
@@ -176,12 +204,12 @@ const PaymentFlow = () => {
 };
 
 // Hospital Type Selection Component
-const HospitalTypeSelection = ({ hospitalTypes, onSelect }) => (
+const HospitalTypeSelection = ({ hospitalTypes, onSelect, onBack }) => (
   <div>
     <h2 className="text-2xl font-semibold text-gray-800 mb-6">
       Select Hospital Type
     </h2>
-    <div className="grid md:grid-cols-3 gap-6">
+    <div className="grid md:grid-cols-3 gap-6 mb-6">
       {hospitalTypes.map((type) => (
         <button
           key={type.id}
@@ -195,6 +223,14 @@ const HospitalTypeSelection = ({ hospitalTypes, onSelect }) => (
           <p className="text-gray-600 text-sm">{type.description}</p>
         </button>
       ))}
+    </div>
+    <div className="flex justify-start">
+      <button
+        onClick={onBack}
+        className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors duration-200"
+      >
+        ← Back
+      </button>
     </div>
   </div>
 );
