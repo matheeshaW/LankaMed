@@ -73,7 +73,7 @@ class MedicalHistoryServiceTest {
                 .userId(1L)
                 .firstName("John")
                 .lastName("Doe")
-                .email("john.doe@example.com")
+                .email("john.doe@realuser.com")
                 .passwordHash("hashedPassword")
                 .role(Role.PATIENT)
                 .build();
@@ -122,14 +122,14 @@ class MedicalHistoryServiceTest {
         // Mock SecurityContext
         when(securityContext.getAuthentication()).thenReturn(authentication);
         SecurityContextHolder.setContext(securityContext);
-        when(authentication.getName()).thenReturn("john.doe@example.com");
+        when(authentication.getName()).thenReturn("john.doe@realuser.com");
     }
 
     // Medical Conditions Tests
     @Test
     void getMedicalConditions_Success() {
         // Given
-        when(medicalConditionRepository.findByPatientUserEmail("john.doe@example.com"))
+        when(medicalConditionRepository.findByPatientUserEmail("john.doe@realuser.com"))
                 .thenReturn(Arrays.asList(testCondition));
 
         // When
@@ -151,7 +151,7 @@ class MedicalHistoryServiceTest {
         createDto.setDiagnosedDate(LocalDate.of(2021, 1, 1));
         createDto.setNotes("High blood pressure");
 
-        when(patientRepository.findByUserEmail("john.doe@example.com"))
+        when(patientRepository.findByUserEmail("john.doe@realuser.com"))
                 .thenReturn(Optional.of(testPatient));
         when(medicalConditionRepository.save(any(MedicalCondition.class)))
                 .thenReturn(testCondition);
@@ -226,7 +226,7 @@ class MedicalHistoryServiceTest {
     @Test
     void getAllergies_Success() {
         // Given
-        when(allergyRepository.findByPatientUserEmail("john.doe@example.com"))
+        when(allergyRepository.findByPatientUserEmail("john.doe@realuser.com"))
                 .thenReturn(Arrays.asList(testAllergy));
 
         // When
@@ -248,7 +248,7 @@ class MedicalHistoryServiceTest {
         createDto.setSeverity(Allergy.Severity.MODERATE);
         createDto.setNotes("Causes mild reaction");
 
-        when(patientRepository.findByUserEmail("john.doe@example.com"))
+        when(patientRepository.findByUserEmail("john.doe@realuser.com"))
                 .thenReturn(Optional.of(testPatient));
         when(allergyRepository.save(any(Allergy.class)))
                 .thenReturn(testAllergy);
@@ -265,7 +265,9 @@ class MedicalHistoryServiceTest {
     @Test
     void getPrescriptions_Success() {
         // Given
-        when(prescriptionRepository.findByPatientUserEmail("john.doe@example.com"))
+        when(patientRepository.findByUserEmail("john.doe@realuser.com"))
+                .thenReturn(Optional.of(testPatient));
+        when(prescriptionRepository.findByPatientPatientId(1L))
                 .thenReturn(Arrays.asList(testPrescription));
 
         // When

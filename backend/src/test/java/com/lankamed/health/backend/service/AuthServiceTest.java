@@ -2,7 +2,9 @@ package com.lankamed.health.backend.service;
 
 import com.lankamed.health.backend.model.Role;
 import com.lankamed.health.backend.model.User;
+import com.lankamed.health.backend.model.patient.Patient;
 import com.lankamed.health.backend.repository.UserRepository;
+import com.lankamed.health.backend.repository.patient.PatientRepository;
 import com.lankamed.health.backend.security.JwtUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -28,6 +30,9 @@ class AuthServiceTest {
 
     @Mock
     private UserRepository userRepository;
+
+    @Mock
+    private PatientRepository patientRepository;
 
     @Mock
     private PasswordEncoder passwordEncoder;
@@ -65,6 +70,11 @@ class AuthServiceTest {
             user.setUserId(1L);
             return user;
         });
+        when(patientRepository.save(any(Patient.class))).thenAnswer(invocation -> {
+            Patient patient = invocation.getArgument(0);
+            patient.setPatientId(1L);
+            return patient;
+        });
 
         // When
         User result = authService.register(firstName, lastName, email, password, role);
@@ -80,6 +90,7 @@ class AuthServiceTest {
         verify(userRepository).existsByEmail(email);
         verify(passwordEncoder).encode(password);
         verify(userRepository).save(any(User.class));
+        verify(patientRepository).save(any(Patient.class));
     }
 
     @Test
@@ -102,6 +113,7 @@ class AuthServiceTest {
         verify(userRepository).existsByEmail(email);
         verify(passwordEncoder, never()).encode(anyString());
         verify(userRepository, never()).save(any(User.class));
+        verify(patientRepository, never()).save(any(Patient.class));
     }
 
     @Test
