@@ -3,9 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { getRole, getCurrentUser } from "../utils/auth";
 import { appointmentAPI, reviewAPI } from "../services/api";
 import api from "../services/api";
-import AppointmentForm from "../components/patient/AppointmentForm";
-import ReviewSection from "../components/patient/ReviewSection";
-import WaitlistBookingForm from "../components/patient/WaitlistBookingForm";
+import AppointmentForm from "../components/appointment/AppointmentForm";
+import ReviewSection from "../components/appointment/ReviewSection";
+import WaitlistBookingForm from "../components/appointment/WaitlistBookingForm";
 
 const AppointmentsPage = () => {
   const [activeTab, setActiveTab] = useState("doctors");

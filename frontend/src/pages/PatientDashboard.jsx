@@ -1,19 +1,15 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { getRole, logout } from "../utils/auth";
+import { getRole } from "../utils/auth";
 import PersonalInformationCard from "../components/patient/PersonalInformationCard";
 import EmergencyContactCard from "../components/patient/EmergencyContactCard";
 import MedicalHistoryCard from "../components/patient/MedicalHistoryCard";
-import HealthMetricsCard from "../components/patient/HealthMetricsCard";
 import DownloadReportsButton from "../components/patient/DownloadReportsButton";
-import UserAppointments from "../components/patient/UserAppointments";
-import WaitingListCard from "../components/patient/WaitingListCard";
-import { patientAPI, paymentAPI, appointmentAPI } from "../services/api";
+import { patientAPI, appointmentAPI } from "../services/api";
 
 const PatientDashboard = () => {
   const navigate = useNavigate();
   const [pendingBills, setPendingBills] = useState([]);
-  const [patientProfile, setPatientProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -49,7 +45,6 @@ const PatientDashboard = () => {
         // Get patient profile - no fallback data
         const profileResponse = await patientAPI.getMyProfile();
         const currentProfile = profileResponse.data;
-        setPatientProfile(currentProfile);
 
         // Then get confirmed appointments for the patient
         if (currentProfile && currentProfile.patientId) {
@@ -157,9 +152,6 @@ const PatientDashboard = () => {
     fetchConfirmedAppointments();
   }, []);
 
-  const handleMakePayment = () => {
-    navigate("/patient/payment");
-  };
 
   const handlePayBill = (billId, amount, description, appointmentId) => {
     // Store bill details in localStorage to pass to payment flow

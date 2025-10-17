@@ -1,11 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { appointmentAPI } from '../../services/api';
-import { getCurrentUser } from '../../utils/auth';
 import ReviewSection from './ReviewSection';
 import api from '../../services/api';
 
 const UserAppointments = () => {
-  const currentUser = getCurrentUser();
   const [appointments, setAppointments] = useState([]);
   const [filteredAppointments, setFilteredAppointments] = useState([]);
   const [filter, setFilter] = useState('all');
@@ -25,7 +23,7 @@ const UserAppointments = () => {
 
   useEffect(() => {
     filterAppointments();
-  }, [appointments, filter]);
+  }, [filterAppointments]);
 
   const loadAppointments = async () => {
     try {
@@ -62,7 +60,7 @@ const UserAppointments = () => {
     }
   };
 
-  const filterAppointments = () => {
+  const filterAppointments = useCallback(() => {
     if (!Array.isArray(appointments)) {
       setFilteredAppointments([]);
       return;
@@ -72,7 +70,7 @@ const UserAppointments = () => {
     } else {
       setFilteredAppointments(appointments.filter(apt => apt.status === filter));
     }
-  };
+  }, [appointments, filter]);
 
   const getStatusColor = (status) => {
     switch (status) {

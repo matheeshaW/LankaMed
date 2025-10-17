@@ -1,13 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { getCurrentUser } from '../../utils/auth';
-import { waitlistAPI, appointmentAPI } from '../../services/api';
+import { waitlistAPI } from '../../services/api';
 import WaitlistBookingForm from './WaitlistBookingForm';
 
 const WaitingListCard = () => {
   const [waitlistEntries, setWaitlistEntries] = useState([]);
   const [loading, setLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
-  const [errorMessage, setErrorMessage] = useState('');
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [selectedWaitlistEntry, setSelectedWaitlistEntry] = useState(null);
   const currentUser = getCurrentUser();
@@ -34,9 +33,9 @@ const WaitingListCard = () => {
       clearInterval(interval);
       window.removeEventListener('waitlistUpdated', handleWaitlistUpdate);
     };
-  }, []);
+  }, [loadWaitlistEntries]);
 
-  const loadWaitlistEntries = async () => {
+  const loadWaitlistEntries = useCallback(async () => {
     setLoading(true);
     try {
       // First try admin endpoint to get all entries (including newly created ones)
@@ -124,7 +123,7 @@ const WaitingListCard = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentUser]);
 
   const handleBookFromWaitlist = (waitlistEntry) => {
     setSelectedWaitlistEntry(waitlistEntry);
