@@ -8,6 +8,8 @@ import com.lankamed.health.backend.model.StaffDetails;
 import com.lankamed.health.backend.model.User;
 import com.lankamed.health.backend.model.patient.Patient;
 import com.lankamed.health.backend.repository.AppointmentRepository;
+import com.lankamed.health.backend.repository.UserRepository;
+import com.lankamed.health.backend.repository.patient.PatientRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -33,10 +35,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(controllers = UserDataController.class,
-        excludeFilters = @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = {
-                com.lankamed.health.backend.config.SecurityConfig.class,
-                com.lankamed.health.backend.security.JwtAuthenticationFilter.class
-        }))
+        excludeFilters = @ComponentScan.Filter(type = org.springframework.context.annotation.FilterType.REGEX,
+                                              pattern = "com\\.lankamed\\.health\\.backend\\.security\\..*"))
 @AutoConfigureMockMvc(addFilters = false)
 class UserDataControllerTest {
 
@@ -48,6 +48,12 @@ class UserDataControllerTest {
 
 	@MockBean
 	private AppointmentRepository appointmentRepository;
+
+	@MockBean
+	private UserRepository userRepository;
+
+	@MockBean
+	private PatientRepository patientRepository;
 
 	private Appointment buildAppointment(Long id) {
 		User user = User.builder().firstName("A").lastName("B").build();

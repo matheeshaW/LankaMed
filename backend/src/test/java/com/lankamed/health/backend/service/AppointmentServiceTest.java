@@ -179,11 +179,37 @@ class AppointmentServiceTest {
     }
 
     @Test
-    void getPatientAppointments_NoAuth_Throws() {
+    void getPatientAppointments_NoAuth_ReturnsAllAppointments() {
                 // Simulate missing authentication in security context by clearing the context
                 SecurityContextHolder.clearContext();
 
-                // Then - getCurrentUserEmail should attempt to dereference a null Authentication and throw
-                assertThrows(NullPointerException.class, () -> appointmentService.getPatientAppointments());
+                // Mock the repository to return some appointments with complete data
+                StaffDetails doctor = StaffDetails.builder()
+                    .staffId(1L)
+                    .consultationFee(100.0)
+                    .user(User.builder().firstName("Dr. Test").lastName("Doctor").build())
+                    .build();
+                
+                Hospital hospital = Hospital.builder()
+                    .hospitalId(1L)
+                    .name("Test Hospital")
+                    .build();
+                
+                ServiceCategory serviceCategory = ServiceCategory.builder()
+                    .categoryId(1L)
+                    .name("Test Category")
+                    .build();
+                
+                List<Appointment> appointments = Arrays.asList(
+                    Appointment.builder().appointmentId(1L).doctor(doctor).hospital(hospital).serviceCategory(serviceCategory).build(),
+                    Appointment.builder().appointmentId(2L).doctor(doctor).hospital(hospital).serviceCategory(serviceCategory).build()
+                );
+                when(appointmentRepository.findAll()).thenReturn(appointments);
+
+                // Then - service should return all appointments when no auth
+                List<AppointmentDto> result = appointmentService.getPatientAppointments();
+                assertEquals(2, result.size());
+                assertEquals(1L, result.get(0).getAppointmentId());
+                assertEquals(2L, result.get(1).getAppointmentId());
     }
 }

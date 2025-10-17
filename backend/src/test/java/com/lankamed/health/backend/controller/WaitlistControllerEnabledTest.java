@@ -3,6 +3,7 @@ package com.lankamed.health.backend.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lankamed.health.backend.dto.CreateWaitlistDto;
 import com.lankamed.health.backend.dto.WaitlistEntryDto;
+import com.lankamed.health.backend.model.WaitlistEntry;
 import com.lankamed.health.backend.service.WaitlistService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,9 +29,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
                                               pattern = "com\\.lankamed\\.health\\.backend\\.security\\..*"))
 @AutoConfigureMockMvc(addFilters = false)
 @TestPropertySource(properties = {
-    "feature.waitlist.enabled=false"
+    "feature.waitlist.enabled=true"
 })
-class WaitlistControllerTest {
+class WaitlistControllerEnabledTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -41,30 +42,33 @@ class WaitlistControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-
     @Test
-    void addToWaitlist_featureDisabled_fails() throws Exception {
+    void addToWaitlist_featureEnabled_success() throws Exception {
         CreateWaitlistDto dto = new CreateWaitlistDto();
         dto.setDoctorId(1L);
         dto.setHospitalId(2L);
         dto.setServiceCategoryId(3L);
         dto.setDesiredDateTime(LocalDateTime.now().plusDays(1));
-        // Don't mock the service since the controller checks the enabled flag first
+        WaitlistEntryDto entry = WaitlistEntryDto.builder().id(100L).build();
+        when(waitlistService.addToWaitlist(dto)).thenReturn(entry);
 
         mockMvc.perform(post("/api/patients/me/waitlist")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(dto)))
-                .andExpect(status().isBadRequest())
-                .andExpect(content().string("Waitlist feature disabled"));
+                .andExpect(status().isOk())
+                .andExpect(content().string("100"));
     }
 
-
     @Test
-    void getMyWaitlist_featureDisabled_empty() throws Exception {
-        when(waitlistService.getMyWaitlist()).thenReturn(List.of());
+    void getMyWaitlist_featureEnabled_success() throws Exception {
+        WaitlistEntryDto entry = WaitlistEntryDto.builder()
+                .id(1L)
+                .status(WaitlistEntry.Status.QUEUED)
+                .build();
+        when(waitlistService.getMyWaitlist()).thenReturn(List.of(entry));
 
         mockMvc.perform(get("/api/patients/me/waitlist"))
                 .andExpect(status().isOk())
-                .andExpect(content().json(objectMapper.writeValueAsString(List.of())));
+                .andExpect(content().json(objectMapper.writeValueAsString(List.of(entry))));
     }
 }

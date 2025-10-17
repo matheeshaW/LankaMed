@@ -57,9 +57,9 @@ class AppointmentServiceAdditionalTest {
 	@DisplayName("createAppointment - anonymous user falls back to default email and creates patient if missing")
 	void createAppointment_anonymous_createsPatient() {
 		when(authentication.getName()).thenReturn("anonymousUser");
-		when(patientRepository.findByUserEmail("john.doe@example.com")).thenReturn(Optional.empty());
-		User u = User.builder().email("john.doe@example.com").build();
-		when(userRepository.findByEmail("john.doe@example.com")).thenReturn(Optional.of(u));
+		when(patientRepository.findByUserEmail("test@example.com")).thenReturn(Optional.empty());
+		User u = User.builder().email("test@example.com").build();
+		when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(u));
 		when(patientRepository.save(any(Patient.class))).thenAnswer(inv -> inv.getArgument(0));
 
 		Hospital hospital = Hospital.builder().hospitalId(1L).name("H").build();

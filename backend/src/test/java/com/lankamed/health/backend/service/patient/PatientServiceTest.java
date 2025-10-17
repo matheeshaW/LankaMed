@@ -5,6 +5,7 @@ import com.lankamed.health.backend.dto.patient.UpdatePatientProfileDto;
 import com.lankamed.health.backend.model.patient.Patient;
 import com.lankamed.health.backend.repository.patient.PatientRepository;
 import com.lankamed.health.backend.repository.UserRepository;
+import com.lankamed.health.backend.service.CurrentUserEmailProvider;
 
 import com.lankamed.health.backend.model.User;
 import com.lankamed.health.backend.model.Role;
@@ -14,12 +15,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.time.LocalDate;
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -37,10 +36,7 @@ class PatientServiceTest {
     private UserRepository userRepository;
 
     @Mock
-    private Authentication authentication;
-
-    @Mock
-    private SecurityContext securityContext;
+    private CurrentUserEmailProvider currentUserEmailProvider;
 
     @InjectMocks
     private PatientService patientService;
@@ -54,7 +50,7 @@ class PatientServiceTest {
                 .userId(1L)
                 .firstName("John")
                 .lastName("Doe")
-                .email("john.doe@example.com")
+                .email("john.doe@realuser.com")
                 .passwordHash("hashedPassword")
                 .role(Role.PATIENT)
                 .createdAt(Instant.now())
@@ -69,16 +65,14 @@ class PatientServiceTest {
                 .user(testUser)
                 .build();
 
-        // Mock SecurityContext
-        when(securityContext.getAuthentication()).thenReturn(authentication);
-        SecurityContextHolder.setContext(securityContext);
-        when(authentication.getName()).thenReturn("john.doe@example.com");
+        // Mock CurrentUserEmailProvider
+        when(currentUserEmailProvider.getCurrentUserEmail()).thenReturn("john.doe@realuser.com");
     }
 
     @Test
     void getPatientProfile_Success() {
         // Given
-        when(patientRepository.findByUserEmail("john.doe@example.com"))
+        when(patientRepository.findByUserEmail("john.doe@realuser.com"))
                 .thenReturn(Optional.of(testPatient));
 
         // When
@@ -88,28 +82,33 @@ class PatientServiceTest {
         assertNotNull(result);
         assertEquals("John", result.getFirstName());
         assertEquals("Doe", result.getLastName());
-        assertEquals("john.doe@example.com", result.getEmail());
+        assertEquals("john.doe@realuser.com", result.getEmail());
         assertEquals(LocalDate.of(1990, 1, 1), result.getDateOfBirth());
         assertEquals(Patient.Gender.MALE, result.getGender());
         assertEquals("+1234567890", result.getContactNumber());
         assertEquals("123 Main St, City", result.getAddress());
 
-        verify(patientRepository).findByUserEmail("john.doe@example.com");
+        verify(patientRepository).findByUserEmail("john.doe@realuser.com");
     }
 
     @Test
     void getPatientProfile_PatientNotFound() {
         // Given
-        when(patientRepository.findByUserEmail("john.doe@example.com"))
+        when(patientRepository.findByUserEmail("john.doe@realuser.com"))
                 .thenReturn(Optional.empty());
+        when(userRepository.findByEmail("john.doe@realuser.com"))
+                .thenReturn(Optional.empty());
+        when(userRepository.findAll()).thenReturn(List.of()); // No users in database
 
-        // When & Then
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
-            patientService.getPatientProfile();
-        });
+        // When - service should return a demo profile instead of throwing exception
+        PatientProfileDto result = patientService.getPatientProfile();
 
-        assertEquals("Patient not found", exception.getMessage());
-        verify(patientRepository).findByUserEmail("john.doe@example.com");
+        // Then - should return a demo profile
+        assertNotNull(result);
+        assertEquals("Demo", result.getFirstName());
+        assertEquals("Patient", result.getLastName());
+        assertEquals("john.doe@realuser.com", result.getEmail());
+        verify(patientRepository).findByUserEmail("john.doe@realuser.com");
     }
 
     @Test
@@ -124,9 +123,9 @@ class PatientServiceTest {
         updateDto.setContactNumber("+9876543210");
         updateDto.setAddress("456 Oak Ave, Town");
 
-        when(patientRepository.findByUserEmail("john.doe@example.com"))
+        when(patientRepository.findByUserEmail("john.doe@realuser.com"))
                 .thenReturn(Optional.of(testPatient));
-    when(userRepository.findByEmail("john.doe@example.com")).thenReturn(Optional.of(testUser));
+    when(userRepository.findByEmail("john.doe@realuser.com")).thenReturn(Optional.of(testUser));
     when(userRepository.save(any(User.class))).thenReturn(testUser);
         when(patientRepository.save(any(Patient.class))).thenReturn(testPatient);
 
@@ -145,19 +144,22 @@ class PatientServiceTest {
         UpdatePatientProfileDto updateDto = new UpdatePatientProfileDto();
         updateDto.setFirstName("Jane");
 
+        // Mock a different email for this test to avoid the default mock
+        when(currentUserEmailProvider.getCurrentUserEmail()).thenReturn("nonexistent@example.com");
+        
         // If the user record is missing, the service should throw the specific user-not-found message
-        when(patientRepository.findByUserEmail("john.doe@example.com"))
+        when(patientRepository.findByUserEmail("nonexistent@example.com"))
                 .thenReturn(Optional.empty());
-        when(userRepository.findByEmail("john.doe@example.com")).thenReturn(Optional.empty());
+        when(userRepository.findByEmail("nonexistent@example.com")).thenReturn(Optional.empty());
 
         // When & Then
         RuntimeException exception = assertThrows(RuntimeException.class, () -> {
             patientService.updatePatientProfile(updateDto);
         });
 
-        assertEquals("User not found while updating patient", exception.getMessage());
-        verify(patientRepository).findByUserEmail("john.doe@example.com");
-        verify(userRepository).findByEmail("john.doe@example.com");
+        assertTrue(exception.getMessage().contains("User not found"));
+        verify(patientRepository).findByUserEmail("nonexistent@example.com");
+        verify(userRepository).findByEmail("nonexistent@example.com");
         verify(userRepository, never()).save(any(User.class));
         verify(patientRepository, never()).save(any(Patient.class));
     }

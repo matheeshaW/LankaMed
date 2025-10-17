@@ -38,7 +38,6 @@ class WaitlistServiceTest {
     @Mock private Authentication authentication;
     @Mock private SecurityContext securityContext;
 
-    @InjectMocks
     private WaitlistServiceImpl waitlistService;
 
     private Patient patient;
@@ -64,11 +63,16 @@ class WaitlistServiceTest {
                 .specialization("Cardiology")
                 .build();
 
-        // Default mocks for common lookups
-        when(patientRepository.findByUserEmail("john.doe@example.com")).thenReturn(Optional.of(patient));
-        when(hospitalRepository.findById(1L)).thenReturn(Optional.of(hospital));
-        when(serviceCategoryRepository.findById(2L)).thenReturn(Optional.of(category));
-        when(staffDetailsRepository.findById(3L)).thenReturn(Optional.of(doctor));
+        // Default mocks for common lookups - use lenient to avoid unnecessary stubbing errors
+        lenient().when(patientRepository.findByUserEmail("john.doe@example.com")).thenReturn(Optional.of(patient));
+        lenient().when(hospitalRepository.findById(1L)).thenReturn(Optional.of(hospital));
+        lenient().when(serviceCategoryRepository.findById(2L)).thenReturn(Optional.of(category));
+        lenient().when(staffDetailsRepository.findById(3L)).thenReturn(Optional.of(doctor));
+        
+        // Mock findAll methods for fallback scenarios
+        lenient().when(hospitalRepository.findAll()).thenReturn(List.of(hospital));
+        lenient().when(serviceCategoryRepository.findAll()).thenReturn(List.of(category));
+        lenient().when(staffDetailsRepository.findAll()).thenReturn(List.of(doctor));
     }
 
     // Constructor injection to override waitlistEnabled flag for specific tests
@@ -122,6 +126,7 @@ class WaitlistServiceTest {
     void addToWaitlist_missingHospital_throws() {
         WaitlistServiceImpl service = getServiceWithFlag(true);
         when(hospitalRepository.findById(1L)).thenReturn(Optional.empty());
+        when(hospitalRepository.findAll()).thenReturn(List.of()); // No fallback hospitals
 
         CreateWaitlistDto dto = new CreateWaitlistDto();
         dto.setDoctorId(3L);
@@ -130,7 +135,7 @@ class WaitlistServiceTest {
         dto.setDesiredDateTime(LocalDateTime.now().plusDays(1));
 
         RuntimeException ex = assertThrows(RuntimeException.class, () -> service.addToWaitlist(dto));
-        assertTrue(ex.getMessage().contains("Hospital not found"));
+        assertTrue(ex.getMessage().contains("No hospitals configured"));
     }
 
     @Test
@@ -138,6 +143,7 @@ class WaitlistServiceTest {
     void addToWaitlist_missingCategory_throws() {
         WaitlistServiceImpl service = getServiceWithFlag(true);
         when(serviceCategoryRepository.findById(2L)).thenReturn(Optional.empty());
+        when(serviceCategoryRepository.findAll()).thenReturn(List.of()); // No fallback categories
 
         CreateWaitlistDto dto = new CreateWaitlistDto();
         dto.setDoctorId(3L);
@@ -146,7 +152,7 @@ class WaitlistServiceTest {
         dto.setDesiredDateTime(LocalDateTime.now().plusDays(1));
 
         RuntimeException ex = assertThrows(RuntimeException.class, () -> service.addToWaitlist(dto));
-        assertTrue(ex.getMessage().contains("Service category not found"));
+        assertTrue(ex.getMessage().contains("No service categories configured"));
     }
 
     @Test
@@ -154,6 +160,7 @@ class WaitlistServiceTest {
     void addToWaitlist_missingDoctor_throws() {
         WaitlistServiceImpl service = getServiceWithFlag(true);
         when(staffDetailsRepository.findById(3L)).thenReturn(Optional.empty());
+        when(staffDetailsRepository.findAll()).thenReturn(List.of()); // No fallback doctors
 
         CreateWaitlistDto dto = new CreateWaitlistDto();
         dto.setDoctorId(3L);
@@ -162,7 +169,7 @@ class WaitlistServiceTest {
         dto.setDesiredDateTime(LocalDateTime.now().plusDays(1));
 
         RuntimeException ex = assertThrows(RuntimeException.class, () -> service.addToWaitlist(dto));
-        assertTrue(ex.getMessage().contains("Doctor not found"));
+        assertTrue(ex.getMessage().contains("No doctors configured"));
     }
 
     @Test
@@ -178,7 +185,7 @@ class WaitlistServiceTest {
                 .desiredDateTime(LocalDateTime.now().plusDays(2))
                 .status(WaitlistEntry.Status.QUEUED)
                 .build();
-        when(waitlistRepository.findByPatientUserEmailOrderByCreatedAtDesc("john.doe@example.com"))
+        when(waitlistRepository.findByPatientUserEmailAndStatusNotOrderByCreatedAtDesc("john.doe@example.com", WaitlistEntry.Status.PROMOTED))
                 .thenReturn(List.of(entry));
 
         List<WaitlistEntryDto> result = service.getMyWaitlist();
