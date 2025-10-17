@@ -60,6 +60,9 @@ public class Appointment {
     @Column(name = "payment_amount")
     private Double paymentAmount;
 
+    @Column(name = "reason", columnDefinition = "TEXT")
+    private String reason;
+
     @PrePersist
     public void prePersist() {
         if (createdAt == null) {

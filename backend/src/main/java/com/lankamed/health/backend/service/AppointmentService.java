@@ -309,6 +309,7 @@ public class AppointmentService {
                     .status(dto.isPriority() ? Appointment.Status.CONFIRMED : Appointment.Status.PENDING)
                     .priority(dto.isPriority())
                     .paymentAmount(paymentAmount)
+                    .reason(dto.getReason())
                     .build();
         }
     }

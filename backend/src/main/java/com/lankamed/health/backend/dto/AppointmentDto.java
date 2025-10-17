@@ -20,6 +20,7 @@ public class AppointmentDto {
     private Long doctorId;
     private Double paymentAmount;
     private Double doctorFee;
+    private String reason;
 
     public static AppointmentDto fromAppointment(Appointment appointment) {
         Double doctorConsultationFee = appointment.getDoctor().getConsultationFee();
@@ -51,6 +52,7 @@ public class AppointmentDto {
                 .priority(appointment.isPriority())
                 .paymentAmount(finalPaymentAmount)
                 .doctorFee(finalPaymentAmount)
+                .reason(appointment.getReason())
                 .build();
     }
 }

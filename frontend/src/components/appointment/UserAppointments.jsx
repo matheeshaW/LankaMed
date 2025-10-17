@@ -153,7 +153,7 @@ const UserAppointments = () => {
     setShowReviewModal(true);
   };
 
-  const canReschedule = (appointment) => appointment.status === 'CONFIRMED';
+  const canReschedule = (appointment) => appointment.status === 'APPROVED' || appointment.status === 'CONFIRMED';
 
   const openReschedule = (appointment) => {
     setSelectedAppointment(appointment);

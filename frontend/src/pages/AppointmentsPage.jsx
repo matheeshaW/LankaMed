@@ -31,6 +31,9 @@ const AppointmentsPage = () => {
     useState(false);
   const [selectedWaitlistEntry, setSelectedWaitlistEntry] = useState(null);
   const [isRefreshingWaitlist, setIsRefreshingWaitlist] = useState(false);
+  const [showReschedule, setShowReschedule] = useState(false);
+  const [rescheduleDate, setRescheduleDate] = useState('');
+  const [rescheduleTime, setRescheduleTime] = useState('');
   const navigate = useNavigate();
   const currentUser = getCurrentUser();
 
@@ -162,6 +165,41 @@ const AppointmentsPage = () => {
       setTimeout(() => setSuccessMessage(""), 5000);
     } catch (e) {
       console.error("Failed to cancel appointment", e);
+    }
+  };
+
+  const canReschedule = (appointment) => appointment.status === 'APPROVED' || appointment.status === 'CONFIRMED';
+
+  const openReschedule = (appointment) => {
+    setSelectedAppointment(appointment);
+    const dt = appointment.appointmentDateTime ? new Date(appointment.appointmentDateTime) : null;
+    if (dt) {
+      setRescheduleDate(dt.toISOString().slice(0,10));
+      const hh = String(dt.getHours()).padStart(2,'0');
+      const mm = String(dt.getMinutes()).padStart(2,'0');
+      setRescheduleTime(`${hh}:${mm}`);
+    }
+    setShowReschedule(true);
+  };
+
+  const submitReschedule = async () => {
+    if (!selectedAppointment) return;
+    try {
+      const iso = `${rescheduleDate}T${rescheduleTime}:00`;
+      await appointmentAPI.updateAppointment(selectedAppointment.appointmentId, { appointmentDateTime: iso });
+      setAppointments(prev => prev.map(apt => (
+        apt.appointmentId === selectedAppointment.appointmentId
+          ? { ...apt, appointmentDateTime: iso }
+          : apt
+      )));
+      setShowReschedule(false);
+      setSelectedAppointment(null);
+      setSuccessMessage(`Appointment #${selectedAppointment.appointmentId} rescheduled successfully.`);
+      setTimeout(() => setSuccessMessage(""), 5000);
+    } catch (e) {
+      console.error('Failed to reschedule', e);
+      setSuccessMessage('Failed to reschedule appointment. Please try again.');
+      setTimeout(() => setSuccessMessage(""), 5000);
     }
   };
 
@@ -990,49 +1028,57 @@ const AppointmentsPage = () => {
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600">
                       <div>
                         <span className="font-medium">Date:</span>{" "}
-                        {formatDate(appointment.appointmentDate)}
+                        {appointment.appointmentDateTime ? formatDate(appointment.appointmentDateTime) : 'Not specified'}
                       </div>
                       <div>
                         <span className="font-medium">Time:</span>{" "}
-                        {formatTime(appointment.appointmentTime)}
+                        {appointment.appointmentDateTime ? formatTime(appointment.appointmentDateTime) : 'Not specified'}
                       </div>
                       <div>
                         <span className="font-medium">Hospital:</span>{" "}
-                        {appointment.hospitalName}
+                        {appointment.hospitalName || 'Not specified'}
                       </div>
                     </div>
                     <div className="mt-3">
                       <span className="font-medium text-gray-700">Reason:</span>
-                      <p className="text-gray-600 mt-1">{appointment.reason}</p>
+                      <p className="text-gray-600 mt-1">{appointment.reason || 'No reason provided'}</p>
                     </div>
 
-                    {(() => {
-                      const status = String(appointment.status);
-                      const canCancel = [
-                        "PENDING",
-                        "APPROVED",
-                        "CONFIRMED",
-                        "pending",
-                        "approved",
-                        "confirmed",
-                      ].includes(status);
-                      console.log(
-                        "Appointment status:",
-                        status,
-                        "Can cancel:",
-                        canCancel
-                      );
-                      return canCancel;
-                    })() && (
-                      <div className="mt-3">
+                    <div className="mt-3 flex gap-2">
+                      {canReschedule(appointment) && (
+                        <button
+                          onClick={() => openReschedule(appointment)}
+                          className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors duration-200 font-medium"
+                        >
+                          Reschedule
+                        </button>
+                      )}
+                      {(() => {
+                        const status = String(appointment.status);
+                        const canCancel = [
+                          "PENDING",
+                          "APPROVED",
+                          "CONFIRMED",
+                          "pending",
+                          "approved",
+                          "confirmed",
+                        ].includes(status);
+                        console.log(
+                          "Appointment status:",
+                          status,
+                          "Can cancel:",
+                          canCancel
+                        );
+                        return canCancel;
+                      })() && (
                         <button
                           onClick={() => handleCancelAppointment(appointment)}
                           className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors duration-200 font-medium"
                         >
                           Cancel Appointment
                         </button>
-                      </div>
-                    )}
+                      )}
+                    </div>
                   </div>
                   <div className="text-right">
                     <div
@@ -1160,36 +1206,44 @@ const AppointmentsPage = () => {
                         <div className="text-sm text-gray-600 mb-1">
                           Reason for Appointment
                         </div>
-                        <p className="text-gray-800">{appointment.reason}</p>
+                        <p className="text-gray-800">{appointment.reason || 'No reason provided'}</p>
                       </div>
 
-                      {(() => {
-                        const status = String(appointment.status);
-                        const canCancel = [
-                          "PENDING",
-                          "APPROVED",
-                          "CONFIRMED",
-                          "pending",
-                          "approved",
-                          "confirmed",
-                        ].includes(status);
-                        console.log(
-                          "All Appointments - Status:",
-                          status,
-                          "Can cancel:",
-                          canCancel
-                        );
-                        return canCancel;
-                      })() && (
-                        <div className="mt-2">
+                      <div className="mt-2 flex gap-2">
+                        {canReschedule(appointment) && (
+                          <button
+                            onClick={() => openReschedule(appointment)}
+                            className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors duration-200 font-medium"
+                          >
+                            Reschedule
+                          </button>
+                        )}
+                        {(() => {
+                          const status = String(appointment.status);
+                          const canCancel = [
+                            "PENDING",
+                            "APPROVED",
+                            "CONFIRMED",
+                            "pending",
+                            "approved",
+                            "confirmed",
+                          ].includes(status);
+                          console.log(
+                            "All Appointments - Status:",
+                            status,
+                            "Can cancel:",
+                            canCancel
+                          );
+                          return canCancel;
+                        })() && (
                           <button
                             onClick={() => handleCancelAppointment(appointment)}
                             className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors duration-200 font-medium"
                           >
                             Cancel Appointment
                           </button>
-                        </div>
-                      )}
+                        )}
+                      </div>
 
                       {appointment.notes && (
                         <div className="mb-4">
@@ -1457,6 +1511,49 @@ const AppointmentsPage = () => {
             loadAppointments(); // Refresh appointments
           }}
         />
+      )}
+
+      {/* Reschedule Modal */}
+      {showReschedule && selectedAppointment && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
+            <h3 className="text-xl font-bold mb-4">Reschedule Appointment #{selectedAppointment.appointmentId}</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
+                <input 
+                  type="date" 
+                  value={rescheduleDate} 
+                  onChange={(e) => setRescheduleDate(e.target.value)} 
+                  className="w-full border rounded px-3 py-2" 
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Time</label>
+                <input 
+                  type="time" 
+                  value={rescheduleTime} 
+                  onChange={(e) => setRescheduleTime(e.target.value)} 
+                  className="w-full border rounded px-3 py-2" 
+                />
+              </div>
+              <div className="flex justify-end gap-2 pt-2">
+                <button 
+                  onClick={() => setShowReschedule(false)} 
+                  className="px-4 py-2 border rounded hover:bg-gray-50 transition-colors duration-200"
+                >
+                  Cancel
+                </button>
+                <button 
+                  onClick={submitReschedule} 
+                  className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 transition-colors duration-200"
+                >
+                  Save
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
