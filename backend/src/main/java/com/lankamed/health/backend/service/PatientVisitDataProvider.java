@@ -39,17 +39,17 @@ public class PatientVisitDataProvider implements IReportDataProvider {
     }
 
     /**
-     * Fetches filtered patient visit report data using JPA Specifications for dynamic querying
-     * @param criteria filter parameters (hospital, service, patientCategory, gender, age range, date range)
-     * @return Map containing KPIs: totalVisits, uniquePatients, reportPeriod
+     * Fetches filtered patient visit report data for the given criteria.
+     * @param criteria a map of parameters (hospital, service, patientCategory, gender, minAge, maxAge, etc)
+     * @return Map of report KPIs and data (never exposes unfiltered JPA entities)
      */
     @Override
     public Map<String, Object> fetchData(Map<String, Object> criteria) {
-        // Build dynamic query using JPA Specifications
+
         Specification<Visit> spec = (root, query, cb) -> {
             java.util.List<Predicate> predicates = new java.util.ArrayList<>();
-            
-            // Apply filters based on criteria
+
+
             if (criteria.get("hospitalId") != null)
                 predicates.add(cb.equal(root.get("hospitalId"), criteria.get("hospitalId")));
             if (criteria.get("serviceCategory") != null)
@@ -62,49 +62,52 @@ public class PatientVisitDataProvider implements IReportDataProvider {
                 predicates.add(cb.greaterThanOrEqualTo(root.get("age"), (Integer) criteria.get("minAge")));
             if (criteria.get("maxAge") != null)
                 predicates.add(cb.lessThanOrEqualTo(root.get("age"), (Integer) criteria.get("maxAge")));
-            
-            // Handle date range filtering with proper time boundaries
+
+
             if (criteria.get("from") != null && criteria.get("to") != null) {
                 Object fromObj = criteria.get("from");
                 Object toObj = criteria.get("to");
-                LocalDateTime fromDate, toDate;
-                
-                // Parse date strings and set appropriate time boundaries
-                if (fromObj instanceof LocalDateTime fromDateTime) {
-                    fromDate = fromDateTime;
+                LocalDateTime fromDate;
+                LocalDateTime toDate;
+
+                if (fromObj instanceof LocalDateTime) {
+                    fromDate = (LocalDateTime) fromObj;
+
                 } else {
+                    // Parse date-only string (YYYY-MM-DD) and set time to start of day
                     String fromStr = String.valueOf(fromObj);
                     fromDate = fromStr.contains("T") 
                         ? LocalDateTime.parse(fromStr)
                         : java.time.LocalDate.parse(fromStr).atStartOfDay();
                 }
-                
-                if (toObj instanceof LocalDateTime toDateTime) {
-                    toDate = toDateTime;
+
+                if (toObj instanceof LocalDateTime) {
+                    toDate = (LocalDateTime) toObj;
                 } else {
+                    // Parse date-only string (YYYY-MM-DD) and set time to end of day
                     String toStr = String.valueOf(toObj);
                     toDate = toStr.contains("T")
                         ? LocalDateTime.parse(toStr)
                         : java.time.LocalDate.parse(toStr).atTime(23, 59, 59);
                 }
-                
+
                 predicates.add(cb.between(root.get("visitDate"), fromDate, toDate));
             }
-            return cb.and(predicates.toArray(Predicate[]::new));
+            return cb.and(predicates.toArray(new Predicate[0]));
         };
-        
-        // Calculate KPIs
+
+
         Map<String, Object> data = new HashMap<>();
         long totalVisits = visitRepository.count(spec);
         data.put("totalVisits", totalVisits);
-        
-        // Count unique patients (Note: This could be optimized with a custom query)
+
+        // Count unique patients by getting distinct patient IDs
         long uniquePatients = visitRepository.findAll(spec).stream()
             .map(visit -> visit.getPatient().getPatientId())
             .distinct()
             .count();
         data.put("uniquePatients", uniquePatients);
-        
+
         data.put("reportPeriod", criteria.getOrDefault("from", "N/A") + " - " + criteria.getOrDefault("to", "N/A"));
         return data;
     }

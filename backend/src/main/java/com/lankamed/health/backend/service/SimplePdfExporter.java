@@ -15,8 +15,19 @@ public class SimplePdfExporter implements IPdfExporter {
     @Override
     public byte[] export(String html) {
         try {
-            return html.getBytes("UTF-8");
+            System.out.println("=== SimplePdfExporter: Exporting HTML ===");
+            System.out.println("HTML length: " + html.length());
+            
+            byte[] bytes = html.getBytes("UTF-8");
+            
+            System.out.println("=== SimplePdfExporter: Export successful ===");
+            System.out.println("Bytes length: " + bytes.length);
+            
+            return bytes;
+            
         } catch (Exception e) {
+            System.err.println("=== SimplePdfExporter: Export FAILED ===");
+            e.printStackTrace();
             throw new RuntimeException("PDF export failed: " + e.getMessage(), e);
         }
     }
