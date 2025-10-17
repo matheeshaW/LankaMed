@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Appointment System Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        button { padding: 10px 15px; margin: 5px; background: #007bff; color: white; border: none; border-radius: 3px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 3px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>LankaMed Appointment System Test</h1>
+    
+    <div class="test-section">
+        <h3>1. Test Doctors Endpoint</h3>
+        <button onclick="testDoctors()">Get Sample Doctors</button>
+        <div id="doctors-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>2. Test Appointment Creation</h3>
+        <button onclick="testCreateAppointment()">Create Test Appointment</button>
+        <div id="create-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>3. Test Get All Appointments</h3>
+        <button onclick="testGetAppointments()">Get All Appointments</button>
+        <div id="appointments-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>4. Test Update Appointment Status</h3        <button onclick="testUpdateStatus()">Update Status to APPROVED</button>
+        <div id="update-result"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8080/api/user-data';
+        
+        async function testDoctors() {
+            const resultDiv = document.getElementById('doctors-result');
+            try {
+                const response = await fetch(`${API_BASE}/doctors`);
+                const data = await response.json();
+                resultDiv.innerHTML = `<div class="success">
+                    <h4>✅ Success!</h4>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                </div>`;
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">
+                    <h4>❌ Error!</h4>
+                    <p>${error.message}</p>
+                </div>`;
+            }
+        }
+        
+        async function testCreateAppointment() {
+            const resultDiv = document.getElementById('create-result');
+            try {
+                const appointmentData = {
+                    doctorId: 1,
+                    appointmentDateTime: new Date().toISOString(),
+                    reason: 'Test appointment from HTML test page'
+                };
+                
+                const response = await fetch(`${API_BASE}/create-appointment`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(appointmentData)
+                });
+                
+                const data = await response.json();
+                resultDiv.innerHTML = `<div class="success">
+                    <h4>✅ Success!</h4>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                </div>`;
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">
+                    <h4>❌ Error!</h4>
+                    <p>${error.message}</p>
+                </div>`;
+            }
+        }
+        
+        async function testGetAppointments() {
+            const resultDiv = document.getElementById('appointments-result');
+            try {
+                const response = await fetch(`${API_BASE}/appointments`);
+                const data = await response.json();
+                resultDiv.innerHTML = `<div class="success">
+                    <h4>✅ Success!</h4>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                </div>`;
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">
+                    <h4>❌ Error!</h4>
+                    <p>${error.message}</p>
+                </div>`;
+            }
+        }
+        
+        async function testUpdateStatus() {
+            const resultDiv = document.getElementById('update-result');
+            try {
+                // First get appointments to find an appointment ID
+                const appointmentsResponse = await fetch(`${API_BASE}/appointments`);
+                const appointmentsData = await appointmentsResponse.json();
+                
+                if (appointmentsData.success && appointmentsData.appointments.length > 0) {
+                    const appointmentId = appointmentsData.appointments[0].appointmentId;
+                    
+                    const response = await fetch(`${API_BASE}/appointments/${appointmentId}/status`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ status: 'APPROVED' })
+                    });
+                    
+                    const data = await response.json();
+                    resultDiv.innerHTML = `<div class="success">
+                        <h4>✅ Success!</h4>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    </div>`;
+                } else {
+                    resultDiv.innerHTML = `<div class="error">
+                        <h4>❌ No appointments found!</h4>
+                        <p>Create an appointment first.</p>
+                    </div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">
+                    <h4>❌ Error!</h4>
+                    <p>${error.message}</p>
+                </div>`;
+            }
+        }
+    </script>
+</body>
+</html>
+

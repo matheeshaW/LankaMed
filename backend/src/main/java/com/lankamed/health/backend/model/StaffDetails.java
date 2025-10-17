@@ -24,11 +24,14 @@ public class StaffDetails {
     private Hospital hospital;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "service_category_id")
+    @JoinColumn(name = "service_category_id", referencedColumnName = "category_id")
     private ServiceCategory serviceCategory;
 
     @Size(max = 100)
     private String specialization;
+
+    @Column(name = "consultation_fee")
+    private Double consultationFee;
 
     @OneToOne(fetch = FetchType.LAZY)
     @MapsId

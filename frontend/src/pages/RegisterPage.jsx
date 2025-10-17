@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import api from '../services/api';
+import { Link, useNavigate } from 'react-router-dom';
+import { authAPI } from '../services/api';
+import { parseJwt } from '../utils/auth';
 import backgroundImage from '../assets/images/loginbackground.png';
 
 export default function RegisterPage() {
@@ -9,6 +10,7 @@ export default function RegisterPage() {
 	const [error, setError] = useState('');
 	const [success, setSuccess] = useState('');
 	const [submitting, setSubmitting] = useState(false);
+	const navigate = useNavigate();
 
 	const validators = {
 		firstName: (v) => {
@@ -61,13 +63,72 @@ export default function RegisterPage() {
 		setError(''); setSuccess('');
 		if (!validateAll()) return;
 		setSubmitting(true);
+		
 		try {
-			await api.post('/api/auth/register', form);
-			setSuccess('Registered successfully. You can now log in.');
-			setForm({ firstName: '', lastName: '', email: '', role: 'PATIENT', password: '' });
-			setErrors({});
+			// Register with backend API
+			const response = await authAPI.register({
+				firstName: form.firstName,
+				lastName: form.lastName,
+				email: form.email,
+				password: form.password,
+				role: form.role
+			});
+			
+			console.log('Registration successful:', response.data);
+			
+			// Auto-login after successful registration
+			const loginResponse = await authAPI.login({
+				email: form.email,
+				password: form.password
+			});
+			
+			// Store token and user data
+			localStorage.setItem('token', loginResponse.data.token);
+			
+			// Extract user data from JWT token
+			const token = loginResponse.data.token;
+			const tokenData = parseJwt(token);
+			console.log('Registration token data:', tokenData);
+			
+			// Create a proper user ID
+			const userId = `PAT${Date.now().toString().slice(-6)}`;
+			
+			const user = {
+				userId: userId,
+				patientId: userId, // Same as userId for patient
+				firstName: form.firstName,
+				lastName: form.lastName,
+				email: form.email,
+				role: tokenData.role,
+				dateOfBirth: '1990-01-01', // Default date
+				gender: 'Not Specified',
+				contactNumber: 'Not Provided',
+				address: 'Not Provided'
+			};
+			
+			localStorage.setItem('user', JSON.stringify(user));
+			console.log('Registration user data stored:', user);
+			
+			setSuccess('Registration successful! Redirecting to dashboard...');
+			
+			// Redirect to appropriate dashboard
+			setTimeout(() => {
+				if (form.role === 'ADMIN') {
+					navigate('/admin');
+				} else {
+					navigate('/patient');
+				}
+			}, 1500);
+			
 		} catch (err) {
-			setError(err.response?.data?.message || 'Registration failed');
+			console.error('Registration error:', err);
+			if (err.response?.data?.message) {
+				setError(err.response.data.message);
+			} else if (err.response?.status === 400) {
+				setError('Email already registered. Please use a different email.');
+			} else {
+				setError('Registration failed. Please try again.');
+			}
 		} finally {
 			setSubmitting(false);
 		}

@@ -12,4 +12,5 @@ public interface StaffDetailsRepository extends JpaRepository<StaffDetails, Long
     Optional<StaffDetails> findByStaffId(Long staffId);
     List<StaffDetails> findByHospitalHospitalId(Long hospitalId);
     List<StaffDetails> findByServiceCategoryCategoryId(Long categoryId);
+    List<StaffDetails> findBySpecialization(String specialization);
 }

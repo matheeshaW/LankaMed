@@ -1,7 +1,6 @@
 package com.lankamed.health.backend.model.patient;
 
 import com.lankamed.health.backend.model.User;
-import com.lankamed.health.backend.model.patient.GenderConverter;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
@@ -45,5 +44,3 @@ public class Patient {
         MALE, FEMALE, OTHER
     }
 }
-
-

@@ -6,6 +6,9 @@ import com.lankamed.health.backend.service.patient.PatientService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
+import java.util.HashMap;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/patients")
@@ -19,16 +22,61 @@ public class PatientController {
     }
 
     @GetMapping("/me")
+    @PreAuthorize("permitAll()")
     public ResponseEntity<PatientProfileDto> getPatientProfile() {
         PatientProfileDto profile = patientService.getPatientProfile();
         return ResponseEntity.ok(profile);
     }
 
     @PutMapping("/me")
+    @PreAuthorize("permitAll()")
     public ResponseEntity<PatientProfileDto> updatePatientProfile(@Valid @RequestBody UpdatePatientProfileDto updateDto) {
         PatientProfileDto updatedProfile = patientService.updatePatientProfile(updateDto);
         return ResponseEntity.ok(updatedProfile);
     }
+
+    @GetMapping("/test")
+    @PreAuthorize("permitAll()")
+    public ResponseEntity<PatientProfileDto> getTestPatientProfile() {
+        PatientProfileDto profile = patientService.getPatientProfile();
+        return ResponseEntity.ok(profile);
+    }
+
+    @GetMapping("/public")
+    @PreAuthorize("permitAll()")
+    public ResponseEntity<Map<String, Object>> getPublicPatientData() {
+        try {
+            PatientProfileDto profile = patientService.getPatientProfile();
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("data", profile);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("error", e.getMessage());
+            return ResponseEntity.ok(response);
+        }
+    }
+
+    @GetMapping("/test-patient")
+    @PreAuthorize("permitAll()")
+    public ResponseEntity<Map<String, Object>> getTestPatient() {
+        try {
+            // Return the first available patient for testing
+            java.util.List<PatientProfileDto> patients = patientService.getAllPatientsForTesting();
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("data", patients);
+            response.put("count", patients.size());
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("error", e.getMessage());
+            return ResponseEntity.ok(response);
+        }
+    }
+
+
 }
-
-

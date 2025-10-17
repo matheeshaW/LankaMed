@@ -17,10 +17,8 @@ export function parseJwt(token) {
 }
 
 export function getRole() {
-	const token = getToken();
-	if (!token) return '';
-	const payload = parseJwt(token);
-	return payload?.role || '';
+	const user = getCurrentUser();
+	return user?.role || '';
 }
 
 export function isLoggedIn() {
@@ -29,6 +27,33 @@ export function isLoggedIn() {
 
 export function logout() {
 	localStorage.removeItem('token');
+	localStorage.removeItem('user');
+}
+
+// Get current logged-in user details
+export function getCurrentUser() {
+	const userStr = localStorage.getItem('user');
+	if (userStr) {
+		try {
+			return JSON.parse(userStr);
+		} catch (e) {
+			return null;
+		}
+	}
+	return null;
+}
+
+// Set current user details
+export function setCurrentUser(user) {
+	localStorage.setItem('user', JSON.stringify(user));
+}
+
+// Mock login function for demonstration
+export function mockLogin(userData) {
+	const mockToken = 'mock-jwt-token-' + Date.now();
+	localStorage.setItem('token', mockToken);
+	localStorage.setItem('user', JSON.stringify(userData));
+	return { token: mockToken, user: userData };
 }
 
 

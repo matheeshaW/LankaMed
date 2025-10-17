@@ -37,5 +37,16 @@
             "vmArgs": "",
             "console": "integratedTerminal"
         }
-    ]
+    ,
+    {
+      "type": "java",
+      "name": "Spring Boot-BackendApplication<backend>",
+      "request": "launch",
+      "cwd": "${workspaceFolder}",
+      "mainClass": "com.lankamed.health.backend.BackendApplication",
+      "projectName": "backend",
+      "args": "",
+      "envFile": "${workspaceFolder}/.env"
+    }
+  ]
 }
